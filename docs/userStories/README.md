@@ -46,11 +46,11 @@ El sistema tiene tres roles: **Alumno** y **Soporte técnico**, que usan la apli
 | HU-AL-02 | Escanear el código QR de una computadora | Móvil | Alta | Documento | [alumno/HU-AL-02-escanear-qr.md](./alumno/HU-AL-02-escanear-qr.md) |
 | HU-AL-03 | Registrar el uso de un equipo | Móvil | Alta | Documento | [alumno/HU-AL-03-registrar-uso.md](./alumno/HU-AL-03-registrar-uso.md) |
 | HU-AL-04 | Finalizar el uso de un equipo | Móvil | Media | Propuesta | [alumno/HU-AL-04-finalizar-uso.md](./alumno/HU-AL-04-finalizar-uso.md) |
-| HU-AL-05 | Consultar mis registros de uso | Móvil | Media | Documento | [alumno/HU-AL-05-consultar-registros.md](./alumno/HU-AL-05-consultar-registros.md) |
-| HU-AL-06 | Reportar una incidencia de un equipo | Móvil | Alta | Documento | [alumno/HU-AL-06-reportar-incidencia.md](./alumno/HU-AL-06-reportar-incidencia.md) |
-| HU-AL-07 | Consultar el estado de mis reportes | Móvil | Alta | Documento | [alumno/HU-AL-07-consultar-reportes.md](./alumno/HU-AL-07-consultar-reportes.md) |
-| HU-AL-08 | Adjuntar una foto al reporte | Móvil | Baja | Propuesta | [alumno/HU-AL-08-adjuntar-foto.md](./alumno/HU-AL-08-adjuntar-foto.md) |
-| HU-AL-09 | Recibir notificación de cambio de estado | Móvil | Baja | Propuesta | [alumno/HU-AL-09-notificacion-cambio-estado.md](./alumno/HU-AL-09-notificacion-cambio-estado.md) |
+| HU-AL-05 | Consultar mis registros de uso | Móvil | Media | Documento | [alumno/HU-AL-05-consultar-registros.md](alumno/HU-AL-04-consultar-registros.md) |
+| HU-AL-06 | Reportar una incidencia de un equipo | Móvil | Alta | Documento | [alumno/HU-AL-06-reportar-incidencia.md](alumno/HU-AL-05-reportar-incidencia.md) |
+| HU-AL-07 | Consultar el estado de mis reportes | Móvil | Alta | Documento | [alumno/HU-AL-07-consultar-reportes.md](alumno/HU-AL-06-consultar-reportes.md) |
+| HU-AL-08 | Adjuntar una foto al reporte | Móvil | Baja | Propuesta | [alumno/HU-AL-08-adjuntar-foto.md](alumno/HU-AL-07-adjuntar-foto.md) |
+| HU-AL-09 | Recibir notificación de cambio de estado | Móvil | Baja | Propuesta | [alumno/HU-AL-09-notificacion-cambio-estado.md](alumno/HU-AL-08-notificacion-cambio-estado.md) |
 | **Soporte técnico — Aplicación móvil** | | | | | |
 | HU-ST-01 | Iniciar sesión | Móvil | Alta | Documento | [soporte-tecnico/HU-ST-01-iniciar-sesion.md](./soporte-tecnico/HU-ST-01-iniciar-sesion.md) |
 | HU-ST-02 | Consultar las incidencias reportadas | Móvil | Alta | Documento | [soporte-tecnico/HU-ST-02-consultar-incidencias.md](./soporte-tecnico/HU-ST-02-consultar-incidencias.md) |
