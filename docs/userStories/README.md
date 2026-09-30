@@ -39,41 +39,41 @@ El sistema tiene tres roles: **Alumno** y **Soporte técnico**, que usan la apli
 | ID | Historia | Plataforma | Prioridad | Origen | Archivo |
 |---|---|---|---|---|---|
 | **Historias transversales** | | | | | |
-| HU-GEN-01 | Control de acceso por rol | Móvil y Web | Alta | Propuesta | [transversales/HU-GEN-01-control-acceso.md](./transversales/HU-GEN-01-control-acceso.md) |
-| HU-GEN-02 | Cerrar sesión | Móvil y Web | Media | Propuesta | [transversales/HU-GEN-02-cerrar-sesion.md](./transversales/HU-GEN-02-cerrar-sesion.md) |
+| HU-GEN-01 | Control de acceso por rol | Móvil y Web | Alta | Propuesta | [transversales/HU-GEN-01-control-acceso.md](transversal/HU-GEN-01-control-acceso.md) |
+| HU-GEN-02 | Cerrar sesión | Móvil y Web | Media | Propuesta | [transversales/HU-GEN-02-cerrar-sesion.md](transversal/HU-GEN-02-cerrar-sesion.md) |
 | **Alumno — Aplicación móvil** | | | | | |
-| HU-AL-01 | Iniciar sesión | Móvil | Alta | Documento | [alumno/HU-AL-01-iniciar-sesion.md](./alumno/HU-AL-01-iniciar-sesion.md) |
-| HU-AL-02 | Escanear el código QR de una computadora | Móvil | Alta | Documento | [alumno/HU-AL-02-escanear-qr.md](./alumno/HU-AL-02-escanear-qr.md) |
-| HU-AL-03 | Registrar el uso de un equipo | Móvil | Alta | Documento | [alumno/HU-AL-03-registrar-uso.md](./alumno/HU-AL-03-registrar-uso.md) |
-| HU-AL-04 | Finalizar el uso de un equipo | Móvil | Media | Propuesta | [alumno/HU-AL-04-finalizar-uso.md](./alumno/HU-AL-04-finalizar-uso.md) |
-| HU-AL-05 | Consultar mis registros de uso | Móvil | Media | Documento | [alumno/HU-AL-05-consultar-registros.md](alumno/HU-AL-04-consultar-registros.md) |
-| HU-AL-06 | Reportar una incidencia de un equipo | Móvil | Alta | Documento | [alumno/HU-AL-06-reportar-incidencia.md](alumno/HU-AL-05-reportar-incidencia.md) |
-| HU-AL-07 | Consultar el estado de mis reportes | Móvil | Alta | Documento | [alumno/HU-AL-07-consultar-reportes.md](alumno/HU-AL-06-consultar-reportes.md) |
-| HU-AL-08 | Adjuntar una foto al reporte | Móvil | Baja | Propuesta | [alumno/HU-AL-08-adjuntar-foto.md](alumno/HU-AL-07-adjuntar-foto.md) |
-| HU-AL-09 | Recibir notificación de cambio de estado | Móvil | Baja | Propuesta | [alumno/HU-AL-09-notificacion-cambio-estado.md](alumno/HU-AL-08-notificacion-cambio-estado.md) |
+| HU-AL-01 | Iniciar sesión | Móvil | Alta | Documento | [alumno/HU-AL-01-iniciar-sesion.md](student/HU-AL-01-iniciar-sesion.md) |
+| HU-AL-02 | Escanear el código QR de una computadora | Móvil | Alta | Documento | [alumno/HU-AL-02-escanear-qr.md](student/HU-AL-02-escanear-qr.md) |
+| HU-AL-03 | Registrar el uso de un equipo | Móvil | Alta | Documento | [alumno/HU-AL-03-registrar-uso.md](student/HU-AL-03-registrar-uso.md) |
+| HU-AL-04 | Finalizar el uso de un equipo | Móvil | Media | Propuesta | [alumno/HU-AL-04-finalizar-uso.md](student/HU-AL-04-finalizar-uso.md) |
+| HU-AL-05 | Consultar mis registros de uso | Móvil | Media | Documento | [alumno/HU-AL-05-consultar-registros.md](student/HU-AL-04-consultar-registros.md) |
+| HU-AL-06 | Reportar una incidencia de un equipo | Móvil | Alta | Documento | [alumno/HU-AL-06-reportar-incidencia.md](student/HU-AL-05-reportar-incidencia.md) |
+| HU-AL-07 | Consultar el estado de mis reportes | Móvil | Alta | Documento | [alumno/HU-AL-07-consultar-reportes.md](student/HU-AL-06-consultar-reportes.md) |
+| HU-AL-08 | Adjuntar una foto al reporte | Móvil | Baja | Propuesta | [alumno/HU-AL-08-adjuntar-foto.md](student/HU-AL-07-adjuntar-foto.md) |
+| HU-AL-09 | Recibir notificación de cambio de estado | Móvil | Baja | Propuesta | [alumno/HU-AL-09-notificacion-cambio-estado.md](student/HU-AL-08-notificacion-cambio-estado.md) |
 | **Soporte técnico — Aplicación móvil** | | | | | |
-| HU-ST-01 | Iniciar sesión | Móvil | Alta | Documento | [soporte-tecnico/HU-ST-01-iniciar-sesion.md](./soporte-tecnico/HU-ST-01-iniciar-sesion.md) |
-| HU-ST-02 | Consultar las incidencias reportadas | Móvil | Alta | Documento | [soporte-tecnico/HU-ST-02-consultar-incidencias.md](./soporte-tecnico/HU-ST-02-consultar-incidencias.md) |
-| HU-ST-03 | Identificar la computadora y su ubicación | Móvil | Alta | Documento | [soporte-tecnico/HU-ST-03-identificar-computadora.md](./soporte-tecnico/HU-ST-03-identificar-computadora.md) |
-| HU-ST-04 | Tomar una incidencia para su atención | Móvil | Alta | Documento | [soporte-tecnico/HU-ST-04-tomar-incidencia.md](./soporte-tecnico/HU-ST-04-tomar-incidencia.md) |
-| HU-ST-05 | Actualizar el estado de una incidencia | Móvil | Alta | Documento | [soporte-tecnico/HU-ST-05-actualizar-estado.md](./soporte-tecnico/HU-ST-05-actualizar-estado.md) |
-| HU-ST-06 | Registrar la solución aplicada | Móvil | Alta | Documento | [soporte-tecnico/HU-ST-06-registrar-solucion.md](./soporte-tecnico/HU-ST-06-registrar-solucion.md) |
-| HU-ST-07 | Consultar el historial de incidencias atendidas | Móvil | Media | Documento | [soporte-tecnico/HU-ST-07-consultar-historial.md](./soporte-tecnico/HU-ST-07-consultar-historial.md) |
-| HU-ST-08 | Recibir notificación de nuevas incidencias | Móvil | Media | Propuesta | [soporte-tecnico/HU-ST-08-notificacion-nuevas-incidencias.md](./soporte-tecnico/HU-ST-08-notificacion-nuevas-incidencias.md) |
-| HU-ST-09 | Escanear el QR del equipo en sitio | Móvil | Baja | Propuesta | [soporte-tecnico/HU-ST-09-escanear-qr-sitio.md](./soporte-tecnico/HU-ST-09-escanear-qr-sitio.md) |
+| HU-ST-01 | Iniciar sesión | Móvil | Alta | Documento | [soporte-tecnico/HU-ST-01-iniciar-sesion.md](technical-support/HU-ST-01-iniciar-sesion.md) |
+| HU-ST-02 | Consultar las incidencias reportadas | Móvil | Alta | Documento | [soporte-tecnico/HU-ST-02-consultar-incidencias.md](technical-support/HU-ST-02-consultar-incidencias.md) |
+| HU-ST-03 | Identificar la computadora y su ubicación | Móvil | Alta | Documento | [soporte-tecnico/HU-ST-03-identificar-computadora.md](technical-support/HU-ST-03-identificar-computadora.md) |
+| HU-ST-04 | Tomar una incidencia para su atención | Móvil | Alta | Documento | [soporte-tecnico/HU-ST-04-tomar-incidencia.md](technical-support/HU-ST-04-tomar-incidencia.md) |
+| HU-ST-05 | Actualizar el estado de una incidencia | Móvil | Alta | Documento | [soporte-tecnico/HU-ST-05-actualizar-estado.md](technical-support/HU-ST-05-actualizar-estado.md) |
+| HU-ST-06 | Registrar la solución aplicada | Móvil | Alta | Documento | [soporte-tecnico/HU-ST-06-registrar-solucion.md](technical-support/HU-ST-06-registrar-solucion.md) |
+| HU-ST-07 | Consultar el historial de incidencias atendidas | Móvil | Media | Documento | [soporte-tecnico/HU-ST-07-consultar-historial.md](technical-support/HU-ST-07-consultar-historial.md) |
+| HU-ST-08 | Recibir notificación de nuevas incidencias | Móvil | Media | Propuesta | [soporte-tecnico/HU-ST-08-notificacion-nuevas-incidencias.md](technical-support/HU-ST-08-notificacion-nuevas-incidencias.md) |
+| HU-ST-09 | Escanear el QR del equipo en sitio | Móvil | Baja | Propuesta | [soporte-tecnico/HU-ST-09-escanear-qr-sitio.md](technical-support/HU-ST-09-escanear-qr-sitio.md) |
 | **Administrador — Aplicación web** | | | | | |
-| HU-AD-01 | Iniciar sesión en la aplicación web | Web | Alta | Propuesta | [administrador/HU-AD-01-iniciar-sesion-web.md](./administrador/HU-AD-01-iniciar-sesion-web.md) |
-| HU-AD-02 | Registrar personal de soporte técnico | Web | Alta | Documento | [administrador/HU-AD-02-registrar-soporte.md](./administrador/HU-AD-02-registrar-soporte.md) |
-| HU-AD-03 | Administrar personal de soporte técnico | Web | Media | Documento | [administrador/HU-AD-03-administrar-soporte.md](./administrador/HU-AD-03-administrar-soporte.md) |
-| HU-AD-04 | Registrar equipos de cómputo | Web | Alta | Documento | [administrador/HU-AD-04-registrar-equipos.md](./administrador/HU-AD-04-registrar-equipos.md) |
-| HU-AD-05 | Administrar equipos de cómputo | Web | Media | Documento | [administrador/HU-AD-05-administrar-equipos.md](./administrador/HU-AD-05-administrar-equipos.md) |
-| HU-AD-06 | Generar el código QR único de cada equipo | Web | Alta | Documento | [administrador/HU-AD-06-generar-qr.md](./administrador/HU-AD-06-generar-qr.md) |
-| HU-AD-07 | Descargar e imprimir los códigos QR | Web | Media | Documento | [administrador/HU-AD-07-descargar-imprimir-qr.md](./administrador/HU-AD-07-descargar-imprimir-qr.md) |
-| HU-AD-08 | Consultar el historial de uso de los equipos | Web | Alta | Documento | [administrador/HU-AD-08-consultar-historial-uso.md](./administrador/HU-AD-08-consultar-historial-uso.md) |
-| HU-AD-09 | Consultar y supervisar las incidencias | Web | Alta | Documento | [administrador/HU-AD-09-supervisar-incidencias.md](./administrador/HU-AD-09-supervisar-incidencias.md) |
-| HU-AD-10 | Consultar estadísticas y reportes del sistema | Web | Media | Documento | [administrador/HU-AD-10-estadisticas-reportes.md](./administrador/HU-AD-10-estadisticas-reportes.md) |
-| HU-AD-11 | Exportar reportes | Web | Baja | Propuesta | [administrador/HU-AD-11-exportar-reportes.md](./administrador/HU-AD-11-exportar-reportes.md) |
-| HU-AD-12 | Gestionar cuentas de alumnos | Web | Media | Propuesta | [administrador/HU-AD-12-gestionar-alumnos.md](./administrador/HU-AD-12-gestionar-alumnos.md) |
+| HU-AD-01 | Iniciar sesión en la aplicación web | Web | Alta | Propuesta | [administrador/HU-AD-01-iniciar-sesion-web.md](admin/HU-AD-01-iniciar-sesion-web.md) |
+| HU-AD-02 | Registrar personal de soporte técnico | Web | Alta | Documento | [administrador/HU-AD-02-registrar-soporte.md](admin/HU-AD-02-registrar-soporte.md) |
+| HU-AD-03 | Administrar personal de soporte técnico | Web | Media | Documento | [administrador/HU-AD-03-administrar-soporte.md](admin/HU-AD-03-administrar-soporte.md) |
+| HU-AD-04 | Registrar equipos de cómputo | Web | Alta | Documento | [administrador/HU-AD-04-registrar-equipos.md](admin/HU-AD-04-registrar-equipos.md) |
+| HU-AD-05 | Administrar equipos de cómputo | Web | Media | Documento | [administrador/HU-AD-05-administrar-equipos.md](admin/HU-AD-05-administrar-equipos.md) |
+| HU-AD-06 | Generar el código QR único de cada equipo | Web | Alta | Documento | [administrador/HU-AD-06-generar-qr.md](admin/HU-AD-06-generar-qr.md) |
+| HU-AD-07 | Descargar e imprimir los códigos QR | Web | Media | Documento | [administrador/HU-AD-07-descargar-imprimir-qr.md](admin/HU-AD-07-descargar-imprimir-qr.md) |
+| HU-AD-08 | Consultar el historial de uso de los equipos | Web | Alta | Documento | [administrador/HU-AD-08-consultar-historial-uso.md](admin/HU-AD-08-consultar-historial-uso.md) |
+| HU-AD-09 | Consultar y supervisar las incidencias | Web | Alta | Documento | [administrador/HU-AD-09-supervisar-incidencias.md](admin/HU-AD-09-supervisar-incidencias.md) |
+| HU-AD-10 | Consultar estadísticas y reportes del sistema | Web | Media | Documento | [administrador/HU-AD-10-estadisticas-reportes.md](admin/HU-AD-10-estadisticas-reportes.md) |
+| HU-AD-11 | Exportar reportes | Web | Baja | Propuesta | [administrador/HU-AD-11-exportar-reportes.md](admin/HU-AD-11-exportar-reportes.md) |
+| HU-AD-12 | Gestionar cuentas de alumnos | Web | Media | Propuesta | [administrador/HU-AD-12-gestionar-alumnos.md](admin/HU-AD-12-gestionar-alumnos.md) |
 
 ## 5. Estructura de carpetas
 
