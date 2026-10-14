@@ -1,6 +1,6 @@
 # Backlog de historias de usuario
 
-### Sistema móvil y web para el control de uso e incidencias de equipos de cómputo mediante códigos QR
+### Sistema móvil  para el control de uso e incidencias de equipos de cómputo mediante códigos QR
 
 *Desarrollo móvil integral — Metodología Extreme Programming (XP)*
 
@@ -10,7 +10,7 @@
 
 Este backlog reúne las historias de usuario iniciales del proyecto. Cada historia vive en su propio archivo `.md`, organizado por rol, con el formato **Como [rol], quiero [funcionalidad], para [beneficio]**, criterios de aceptación en forma de checklist (pruebas de aceptación) y una lista de tareas de ingeniería para el desarrollo con Extreme Programming (XP).
 
-El sistema tiene tres roles: **Alumno** y **Soporte técnico**, que usan la aplicación móvil, y **Administrador**, que usa la aplicación web. Cada computadora se identifica mediante un código QR único.
+El sistema tiene tres roles: **Alumno** y **Soporte técnico**, que usan la aplicación móvil, y **Administrador**, que usa la aplicación Móvil. Cada computadora se identifica mediante un código QR único.
 
 ## 2. Cómo leer este backlog
 
@@ -18,7 +18,7 @@ El sistema tiene tres roles: **Alumno** y **Soporte técnico**, que usan la apli
 |---|---|
 | **ID** | `HU-[rol]-[número]`. GEN = transversal, AL = alumno, ST = soporte técnico, AD = administrador. |
 | **Prioridad** | **Alta**: indispensable para el flujo principal. **Media**: importante, puede entrar en una iteración posterior. **Baja**: mejora deseable. |
-| **Plataforma** | Móvil (alumno y soporte técnico), Web (administrador) o ambas. |
+| **Plataforma** | Móvil (alumno y soporte técnico), Móvil (administrador) o ambas. |
 | **Origen** | **Documento**: se desprende directamente del documento del proyecto. **Propuesta**: historia añadida para completar el flujo; debe validarla el equipo. |
 | **Dependencias** | Historias que deben estar terminadas o disponibles antes de esta. |
 
@@ -39,8 +39,8 @@ El sistema tiene tres roles: **Alumno** y **Soporte técnico**, que usan la apli
 | ID | Historia | Plataforma | Prioridad | Origen | Archivo |
 |---|---|---|---|---|---|
 | **Historias transversales** | | | | | |
-| HU-GEN-01 | Control de acceso por rol | Móvil y Web | Alta | Propuesta | [transversales/HU-GEN-01-control-acceso.md](./transversales/HU-GEN-01-control-acceso.md) |
-| HU-GEN-02 | Cerrar sesión | Móvil y Web | Media | Propuesta | [transversales/HU-GEN-02-cerrar-sesion.md](./transversales/HU-GEN-02-cerrar-sesion.md) |
+| HU-GEN-01 | Control de acceso por rol | Móvil | Alta | Propuesta | [transversales/HU-GEN-01-control-acceso.md](./transversales/HU-GEN-01-control-acceso.md) |
+| HU-GEN-02 | Cerrar sesión | Móvil  | Media | Propuesta | [transversales/HU-GEN-02-cerrar-sesion.md](./transversales/HU-GEN-02-cerrar-sesion.md) |
 | **Alumno — Aplicación móvil** | | | | | |
 | HU-AL-01 | Iniciar sesión | Móvil | Alta | Documento | [alumno/HU-AL-01-iniciar-sesion.md](./alumno/HU-AL-01-iniciar-sesion.md) |
 | HU-AL-02 | Escanear el código QR de una computadora | Móvil | Alta | Documento | [alumno/HU-AL-02-escanear-qr.md](./alumno/HU-AL-02-escanear-qr.md) |
@@ -61,19 +61,19 @@ El sistema tiene tres roles: **Alumno** y **Soporte técnico**, que usan la apli
 | HU-ST-07 | Consultar el historial de incidencias atendidas | Móvil | Media | Documento | [soporte-tecnico/HU-ST-07-consultar-historial.md](./soporte-tecnico/HU-ST-07-consultar-historial.md) |
 | HU-ST-08 | Recibir notificación de nuevas incidencias | Móvil | Media | Propuesta | [soporte-tecnico/HU-ST-08-notificacion-nuevas-incidencias.md](./soporte-tecnico/HU-ST-08-notificacion-nuevas-incidencias.md) |
 | HU-ST-09 | Escanear el QR del equipo en sitio | Móvil | Baja | Propuesta | [soporte-tecnico/HU-ST-09-escanear-qr-sitio.md](./soporte-tecnico/HU-ST-09-escanear-qr-sitio.md) |
-| **Administrador — Aplicación web** | | | | | |
-| HU-AD-01 | Iniciar sesión en la aplicación web | Web | Alta | Propuesta | [administrador/HU-AD-01-iniciar-sesion-web.md](./administrador/HU-AD-01-iniciar-sesion-web.md) |
-| HU-AD-02 | Registrar personal de soporte técnico | Web | Alta | Documento | [administrador/HU-AD-02-registrar-soporte.md](./administrador/HU-AD-02-registrar-soporte.md) |
-| HU-AD-03 | Administrar personal de soporte técnico | Web | Media | Documento | [administrador/HU-AD-03-administrar-soporte.md](./administrador/HU-AD-03-administrar-soporte.md) |
-| HU-AD-04 | Registrar equipos de cómputo | Web | Alta | Documento | [administrador/HU-AD-04-registrar-equipos.md](./administrador/HU-AD-04-registrar-equipos.md) |
-| HU-AD-05 | Administrar equipos de cómputo | Web | Media | Documento | [administrador/HU-AD-05-administrar-equipos.md](./administrador/HU-AD-05-administrar-equipos.md) |
-| HU-AD-06 | Generar el código QR único de cada equipo | Web | Alta | Documento | [administrador/HU-AD-06-generar-qr.md](./administrador/HU-AD-06-generar-qr.md) |
-| HU-AD-07 | Descargar e imprimir los códigos QR | Web | Media | Documento | [administrador/HU-AD-07-descargar-imprimir-qr.md](./administrador/HU-AD-07-descargar-imprimir-qr.md) |
-| HU-AD-08 | Consultar el historial de uso de los equipos | Web | Alta | Documento | [administrador/HU-AD-08-consultar-historial-uso.md](./administrador/HU-AD-08-consultar-historial-uso.md) |
-| HU-AD-09 | Consultar y supervisar las incidencias | Web | Alta | Documento | [administrador/HU-AD-09-supervisar-incidencias.md](./administrador/HU-AD-09-supervisar-incidencias.md) |
-| HU-AD-10 | Consultar estadísticas y reportes del sistema | Web | Media | Documento | [administrador/HU-AD-10-estadisticas-reportes.md](./administrador/HU-AD-10-estadisticas-reportes.md) |
-| HU-AD-11 | Exportar reportes | Web | Baja | Propuesta | [administrador/HU-AD-11-exportar-reportes.md](./administrador/HU-AD-11-exportar-reportes.md) |
-| HU-AD-12 | Gestionar cuentas de alumnos | Web | Media | Propuesta | [administrador/HU-AD-12-gestionar-alumnos.md](./administrador/HU-AD-12-gestionar-alumnos.md) |
+| **Administrador — Aplicación Móvil** | | | | | |
+| HU-AD-01 | Iniciar sesión en la aplicación móvil | Móvil | Alta | Propuesta | [administrador/HU-AD-01-iniciar-sesion.md](./administrador/HU-AD-01-iniciar-sesion.md) |
+| HU-AD-02 | Registrar personal de soporte técnico | Móvil | Alta | Documento | [administrador/HU-AD-02-registrar-soporte.md](./administrador/HU-AD-02-registrar-soporte.md) |
+| HU-AD-03 | Administrar personal de soporte técnico | Móvil | Media | Documento | [administrador/HU-AD-03-administrar-soporte.md](./administrador/HU-AD-03-administrar-soporte.md) |
+| HU-AD-04 | Registrar equipos de cómputo | Móvil | Alta | Documento | [administrador/HU-AD-04-registrar-equipos.md](./administrador/HU-AD-04-registrar-equipos.md) |
+| HU-AD-05 | Administrar equipos de cómputo | Móvil | Media | Documento | [administrador/HU-AD-05-administrar-equipos.md](./administrador/HU-AD-05-administrar-equipos.md) |
+| HU-AD-06 | Generar el código QR único de cada equipo | Móvil | Alta | Documento | [administrador/HU-AD-06-generar-qr.md](./administrador/HU-AD-06-generar-qr.md) |
+| HU-AD-07 | Descargar e imprimir los códigos QR | Móvil | Media | Documento | [administrador/HU-AD-07-descargar-imprimir-qr.md](./administrador/HU-AD-07-descargar-imprimir-qr.md) |
+| HU-AD-08 | Consultar el historial de uso de los equipos | Móvil | Alta | Documento | [administrador/HU-AD-08-consultar-historial-uso.md](./administrador/HU-AD-08-consultar-historial-uso.md) |
+| HU-AD-09 | Consultar y supervisar las incidencias | Móvil | Alta | Documento | [administrador/HU-AD-09-supervisar-incidencias.md](./administrador/HU-AD-09-supervisar-incidencias.md) |
+| HU-AD-10 | Consultar estadísticas y reportes del sistema | Móvil | Media | Documento | [administrador/HU-AD-10-estadisticas-reportes.md](./administrador/HU-AD-10-estadisticas-reportes.md) |
+| HU-AD-11 | Exportar reportes | Móvil | Baja | Propuesta | [administrador/HU-AD-11-exportar-reportes.md](./administrador/HU-AD-11-exportar-reportes.md) |
+| HU-AD-12 | Gestionar cuentas de alumnos | Móvil | Media | Propuesta | [administrador/HU-AD-12-gestionar-alumnos.md](./administrador/HU-AD-12-gestionar-alumnos.md) |
 
 ## 5. Estructura de carpetas
 
@@ -104,7 +104,7 @@ docs/user-stories/
 │   ├── HU-ST-08-notificacion-nuevas-incidencias.md
 │   └── HU-ST-09-escanear-qr-sitio.md
 └── administrador/
-    ├── HU-AD-01-iniciar-sesion-web.md
+    ├── HU-AD-01-iniciar-sesion.md
     ├── HU-AD-02-registrar-soporte.md
     ├── HU-AD-03-administrar-soporte.md
     ├── HU-AD-04-registrar-equipos.md

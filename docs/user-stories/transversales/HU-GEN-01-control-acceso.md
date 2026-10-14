@@ -3,7 +3,7 @@
 | Metadato | Detalle |
 | :--- | :--- |
 | **Rol** | Usuario del sistema |
-| **Plataforma** | Móvil y Web |
+| **Plataforma** | Móvil |
 | **Prioridad** | Alta |
 | **Origen** | Propuesta |
 | **Iteración sugerida** | Iteración 1 |
@@ -30,7 +30,7 @@
 ### Tareas de Ingeniería (Engineering Tasks)
 - [ ] Definir roles y permisos en el modelo de datos (Alumno, Soporte técnico, Administrador).
 - [ ] Implementar middleware/guard de autorización en la API.
-- [ ] Restringir rutas y pantallas según rol en la app móvil y en la web.
+- [ ] Restringir rutas y pantallas según rol en la app móvil.
 - [ ] Escribir pruebas de acceso no autorizado por endpoint.
 
 ---

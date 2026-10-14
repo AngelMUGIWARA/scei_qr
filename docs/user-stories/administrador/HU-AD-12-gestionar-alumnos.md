@@ -3,7 +3,7 @@
 | Metadato | Detalle |
 | :--- | :--- |
 | **Rol** | Administrador |
-| **Plataforma** | Web |
+| **Plataforma** | Móvil |
 | **Prioridad** | Media |
 | **Origen** | Propuesta |
 | **Iteración sugerida** | Iteración 2 |
