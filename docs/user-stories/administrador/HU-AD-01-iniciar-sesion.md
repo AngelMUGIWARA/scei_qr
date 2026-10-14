@@ -3,7 +3,7 @@
 | Metadato | Detalle |
 | :--- | :--- |
 | **Rol** | Administrador |
-| **Plataforma** | Web |
+| **Plataforma** | Móvil |
 | **Prioridad** | Alta |
 | **Origen** | Propuesta |
 | **Iteración sugerida** | Iteración 1 |
@@ -13,7 +13,7 @@
 
 ### Narrativa (Card)
 **Como** administrador,  
-**quiero** iniciar sesión en la aplicación web con mis credenciales,  
+**quiero** iniciar sesión en la aplicación movil con mis credenciales,  
 **para** acceder a las funciones de gestión y supervisión del sistema.
 
 ---
@@ -27,6 +27,6 @@
 ---
 
 ### Tareas de Ingeniería (Engineering Tasks)
-- [ ] Implementar el formulario de login del panel web.
+- [ ] Implementar el formulario de login.
 - [ ] Restringir el acceso solo a cuentas con rol Administrador.
 - [ ] Manejar errores de autenticación.
