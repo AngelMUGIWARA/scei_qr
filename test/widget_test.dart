@@ -1,30 +1,25 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
+// Smoke test de la app con sesión restaurada por un repositorio falso.
+// (La demo del contador fue reemplazada por el login real.)
 
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:scei_qr/main.dart';
 
+import 'fakes_auth.dart';
+
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('la app arranca en el splash y termina en el login',
+      (WidgetTester tester) async {
+    await tester.pumpWidget(SceiQrApp(authRepository: FakeAuthRepository()));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    // Splash: muestra logo y spinner mientras restaura la sesión.
+    expect(find.text('SCEI QR'), findsOneWidget);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
     await tester.pump();
+    await tester.pumpAndSettle();
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Sin sesión persistida → formulario de login.
+    expect(find.text('Iniciar sesión'), findsOneWidget);
+    expect(find.text('Usuario'), findsOneWidget);
+    expect(find.text('Contraseña'), findsOneWidget);
   });
 }
