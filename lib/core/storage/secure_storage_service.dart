@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// Wrapper de `flutter_secure_storage` (arquitectura-login-sesion §6).
@@ -14,19 +16,34 @@ class SecureStorageService {
 
   final FlutterSecureStorage _storage;
 
+  static const String _sessionKey = 'auth_session';
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'auth_user';
 
-  /// Guarda el token y los datos mínimos de la sesión.
+  /// Guarda el token y los datos mínimos de la sesión en una única estructura.
+  /// Usa únicamente la clave [auth_session]. Si falla la escritura, se intenta
+  /// limpiar todas las claves y se relanza el error para que el repositorio
+  /// pueda manejarlo.
   Future<void> saveSession({
     required String token,
     required String userJson,
   }) async {
     try {
-      await _storage.write(key: _tokenKey, value: token);
-      await _storage.write(key: _userKey, value: userJson);
+      final combined = jsonEncode({'token': token, 'user': userJson});
+      await _storage.write(key: _sessionKey, value: combined);
+    } catch (e) {
+      try {
+        await clear();
+      } catch (_) {}
+      rethrow;
+    }
+  }
+
+  Future<String?> readSessionJson() async {
+    try {
+      return await _storage.read(key: _sessionKey);
     } catch (_) {
-      // Almacenamiento no disponible: se ignora (la sesión no se persiste).
+      return null;
     }
   }
 
@@ -46,13 +63,44 @@ class SecureStorageService {
     }
   }
 
-  /// Borra toda la sesión (token + usuario).
-  Future<void> clear() async {
+  /// Borra solo las claves legacy (auth_token y auth_user).
+  Future<void> clearLegacySession() async {
+    Object? error;
     try {
       await _storage.delete(key: _tokenKey);
+    } catch (e) {
+      error = e;
+    }
+    try {
       await _storage.delete(key: _userKey);
-    } catch (_) {
-      // Idem: si no hay storage no hay nada que borrar.
+    } catch (e) {
+      error ??= e;
+    }
+    if (error != null) {
+      throw error;
+    }
+  }
+
+  /// Borra toda la sesión (clave unificada y claves antiguas).
+  Future<void> clear() async {
+    Object? error;
+    try {
+      await _storage.delete(key: _sessionKey);
+    } catch (e) {
+      error ??= e;
+    }
+    try {
+      await _storage.delete(key: _tokenKey);
+    } catch (e) {
+      error ??= e;
+    }
+    try {
+      await _storage.delete(key: _userKey);
+    } catch (e) {
+      error ??= e;
+    }
+    if (error != null) {
+      throw error;
     }
   }
 }

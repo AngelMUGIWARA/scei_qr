@@ -42,29 +42,133 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Sesion?> restoreSession() async {
+    // Intentar leer sesión unificada primero
+    final sessionJson = await storage.readSessionJson();
+    if (sessionJson != null) {
+      try {
+        final combined = jsonDecode(sessionJson) as Map<String, dynamic>;
+        final token = combined['token'] as String?;
+        final userJson = combined['user'] as String?;
+        if (token == null || userJson == null) {
+          try {
+            await storage.clear();
+          } catch (_) {}
+          return null;
+        }
+        final sesion = await _restoreFromTokenAndUserJson(token, userJson);
+        if (sesion != null) {
+          return sesion;
+        }
+        try {
+          await storage.clear();
+        } catch (_) {}
+        return null;
+      } catch (_) {
+        try {
+          await storage.clear();
+        } catch (_) {}
+        return null;
+      }
+    }
+
+    // Migración desde claves antiguas
     final token = await storage.readToken();
     final userJson = await storage.readUserJson();
 
-    if (token == null || userJson == null) return null;
+    if (token == null || userJson == null) {
+      if (token != null || userJson != null) {
+        try {
+          await storage.clear();
+        } catch (_) {}
+      }
+      return null;
+    }
 
+    final sesion = await _restoreFromTokenAndUserJson(token, userJson);
+    if (sesion == null) {
+      try {
+        await storage.clear();
+      } catch (_) {}
+      return null;
+    }
+
+    // Migrar a formato unificado si es válido
+    try {
+      await storage.saveSession(token: token, userJson: userJson);
+    } catch (_) {
+      // Si falla migración, no mantener sesión parcial
+      try {
+        await storage.clear();
+      } catch (_) {}
+      return null;
+    }
+    try {
+      await storage.clearLegacySession();
+    } catch (_) {
+      try {
+        await storage.clear();
+      } catch (_) {}
+      return null;
+    }
+    return sesion;
+  }
+
+  Future<Sesion?> _restoreFromTokenAndUserJson(
+    String token,
+    String userJson,
+  ) async {
     // CA HU-AL-01 / HU-GEN-02: token vencido o no decodificable → se descarta.
     if (!_tokenVigente(token)) {
-      await storage.clear();
       return null;
     }
 
     try {
       final json = jsonDecode(userJson) as Map<String, dynamic>;
+      if (!_identidadConsistente(token, json)) {
+        return null;
+      }
       final sesion = _aSesion(json, token);
       if (rolRequerido != null && sesion.rol != rolRequerido) {
-        await storage.clear();
         return null;
       }
       return sesion;
     } catch (_) {
-      // Registro corrupto: se limpia para no dejar la app en un estado raro.
-      await storage.clear();
+      // Registro corrupto
       return null;
+    }
+  }
+
+  bool _identidadConsistente(String token, Map<String, dynamic> userJson) {
+    try {
+      final claims = JwtDecoder.decode(token);
+      // Intentar comprobar identidad con claims disponibles
+      final claimSub = claims['sub'];
+      final claimUsername =
+          claims['username'] ?? claims['user'] ?? claims['name'];
+      final userUsername = userJson['username'];
+
+      // Si hay información para comparar, debe coincidir
+      if (claimSub != null && userJson['usuarioId'] != null) {
+        final claimSubStr = claimSub.toString();
+        final userIdStr = userJson['usuarioId'].toString();
+        if (claimSubStr != userIdStr) {
+          return false;
+        }
+      }
+
+      if (claimUsername != null && userUsername != null) {
+        if (claimUsername.toString() != userUsername.toString()) {
+          return false;
+        }
+      }
+
+      // Si no hay información suficiente para comprobar identidad,
+      // no inventar validación - aceptar solo con otras validaciones
+      return true;
+    } catch (_) {
+      // Si no se puede decodificar para comparar, confiar en otras validaciones
+      // pero el token ya fue validado por vigencia
+      return true;
     }
   }
 

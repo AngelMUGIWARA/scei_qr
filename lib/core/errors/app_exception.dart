@@ -39,3 +39,10 @@ class ValidationException extends AppException {
     super.message = 'Completa los campos requeridos.',
   ]);
 }
+
+/// Error de configuración de la aplicación (URL/entorno inválidos).
+class ConfigException extends AppException {
+  const ConfigException([
+    super.message = 'Configuración inválida. Para servidores remotos debe usarse HTTPS. HTTP solo está permitido para localhost, 127.0.0.1 o 10.0.2.2.',
+  ]);
+}

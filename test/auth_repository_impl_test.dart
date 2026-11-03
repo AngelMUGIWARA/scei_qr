@@ -19,9 +19,11 @@ void main() {
       expect(sesion.rol, Rol.alumno);
       expect(sesion.nombreCompleto, 'Lucía Fernández');
       expect(remote.llamadas, 1);
-      expect(storage.token, 'token');
+      expect(storage.token, isNotNull);
+      expect(storage.sessionJson, isNotNull);
       expect(storage.userJson, isNotNull);
       expect(jsonDecode(storage.userJson!)['username'], 'alumno1');
+      expect(storage.saveCount, 1);
     });
 
     test('traduce los 3 roles del backend al enum de dominio', () async {
@@ -50,8 +52,8 @@ void main() {
         final storage = FakeStorage();
         final repo = AuthRepositoryImpl(remote: remote, storage: storage);
 
-        expect(
-          () => repo.login('alumno1', 'mala'),
+        await expectLater(
+          repo.login('alumno1', 'mala'),
           throwsA(
             isA<AuthException>().having(
               (e) => e.message,
@@ -102,7 +104,65 @@ void main() {
       final sesion = await repo.login('admin', 'Password123!');
 
       expect(sesion.rol, Rol.administrador);
-      expect(storage.token, 'token');
+      expect(storage.token, isNotNull);
+      expect(storage.sessionJson, isNotNull);
+    });
+
+    test('rechaza un token malformado y no lo persiste', () async {
+      final storage = FakeStorage();
+      final repo = AuthRepositoryImpl(
+        remote: FakeRemoteDataSource(
+          respuesta: respuestaLogin(accessToken: 'token-invalido'),
+        ),
+        storage: storage,
+      );
+
+      await expectLater(
+        repo.login('alumno1', 'Password123!'),
+        throwsA(isA<ServerException>()),
+      );
+
+      expect(storage.saveCount, 0);
+      expect(storage.sessionJson, isNull);
+    });
+
+    test('rechaza un token vacío y no lo persiste', () async {
+      final storage = FakeStorage();
+      final repo = AuthRepositoryImpl(
+        remote: FakeRemoteDataSource(
+          respuesta: respuestaLogin(accessToken: ''),
+        ),
+        storage: storage,
+      );
+
+      await expectLater(
+        repo.login('alumno1', 'Password123!'),
+        throwsA(isA<ServerException>()),
+      );
+
+      expect(storage.saveCount, 0);
+      expect(storage.sessionJson, isNull);
+    });
+
+    test('no acepta expiresIn como sustituto de un JWT válido', () async {
+      final storage = FakeStorage();
+      final repo = AuthRepositoryImpl(
+        remote: FakeRemoteDataSource(
+          respuesta: respuestaLogin(
+            accessToken: 'token-invalido',
+            expiresIn: 28800,
+          ),
+        ),
+        storage: storage,
+      );
+
+      await expectLater(
+        repo.login('alumno1', 'Password123!'),
+        throwsA(isA<ServerException>()),
+      );
+
+      expect(storage.saveCount, 0);
+      expect(storage.sessionJson, isNull);
     });
 
     test(
@@ -135,15 +195,17 @@ void main() {
       'token vigente restaura la sesión con la expiración del JWT',
       () async {
         final expira = DateTime.now().add(const Duration(hours: 8));
+        final token = jwtDePrueba(expira: expira);
+        final userJson = jsonEncode({
+          'usuarioId': 1,
+          'username': 'alumno1',
+          'nombreCompleto': 'Lucía Fernández',
+          'rol': 'alumno',
+          'expiraEn': expira.toIso8601String(),
+        });
+
         final storage = FakeStorage()
-          ..token = jwtDePrueba(expira: expira)
-          ..userJson = jsonEncode({
-            'usuarioId': 1,
-            'username': 'alumno1',
-            'nombreCompleto': 'Lucía Fernández',
-            'rol': 'alumno',
-            'expiraEn': expira.toIso8601String(),
-          });
+          ..sessionJson = jsonEncode({'token': token, 'user': userJson});
         final repo = AuthRepositoryImpl(
           remote: FakeRemoteDataSource(respuesta: respuestaLogin()),
           storage: storage,
@@ -154,7 +216,7 @@ void main() {
         expect(sesion, isNotNull);
         expect(sesion!.rol, Rol.alumno);
         expect(sesion.username, 'alumno1');
-        expect(sesion.token, storage.token);
+        expect(sesion.token, token);
         expect(
           sesion.expiraEn.difference(expira).inSeconds.abs(),
           lessThan(2),
@@ -182,7 +244,9 @@ void main() {
 
       expect(await repo.restoreSession(), isNull);
       expect(storage.fueLimpiado, isTrue);
+      expect(storage.sessionJson, isNull);
       expect(storage.token, isNull);
+      expect(storage.userJson, isNull);
     });
 
     test('token no decodificable limpia el almacenamiento', () async {

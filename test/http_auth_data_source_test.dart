@@ -43,6 +43,63 @@ void main() {
       expect(model.fullName, 'Lucía Fernández');
     });
 
+    test('URL sin barra final construye correctamente el endpoint', () async {
+      final client = MockClient((request) async {
+        expect(
+          request.url.toString(),
+          'http://localhost:3000/api/v1/auth/login',
+        );
+        return http.Response(jsonEncode(cuerpoLogin()), 200);
+      });
+
+      final ds = HttpAuthDataSource(
+        baseUrl: 'http://localhost:3000/api/v1',
+        client: client,
+      );
+
+      await ds.login('alumno1', 'Password123!');
+    });
+
+    test(
+      'URL con una barra final construye correctamente el endpoint',
+      () async {
+        final client = MockClient((request) async {
+          expect(
+            request.url.toString(),
+            'http://localhost:3000/api/v1/auth/login',
+          );
+          return http.Response(jsonEncode(cuerpoLogin()), 200);
+        });
+
+        final ds = HttpAuthDataSource(
+          baseUrl: 'http://localhost:3000/api/v1/',
+          client: client,
+        );
+
+        await ds.login('alumno1', 'Password123!');
+      },
+    );
+
+    test(
+      'URL con varias barras finales construye correctamente el endpoint',
+      () async {
+        final client = MockClient((request) async {
+          expect(
+            request.url.toString(),
+            'http://localhost:3000/api/v1/auth/login',
+          );
+          return http.Response(jsonEncode(cuerpoLogin()), 200);
+        });
+
+        final ds = HttpAuthDataSource(
+          baseUrl: 'http://localhost:3000/api/v1///',
+          client: client,
+        );
+
+        await ds.login('alumno1', 'Password123!');
+      },
+    );
+
     test('401 lanza AuthException con mensaje genérico (HU-AL-01)', () async {
       final client = MockClient(
         (_) async => http.Response(
@@ -57,8 +114,8 @@ void main() {
 
       final ds = HttpAuthDataSource(baseUrl: baseUrl, client: client);
 
-      expect(
-        () => ds.login('alumno1', 'mala'),
+      await expectLater(
+        ds.login('alumno1', 'mala'),
         throwsA(
           isA<AuthException>().having(
             (e) => e.message,
@@ -82,13 +139,13 @@ void main() {
 
       final ds = HttpAuthDataSource(baseUrl: baseUrl, client: client);
 
-      expect(
-        () => ds.login('alumno1', '123'),
+      await expectLater(
+        ds.login('alumno1', '123'),
         throwsA(
           isA<AuthException>().having(
             (e) => e.message,
             'mensaje',
-            contains('incorrectos'),
+            'Usuario o contraseña incorrectos',
           ),
         ),
       );
@@ -101,8 +158,8 @@ void main() {
 
       final ds = HttpAuthDataSource(baseUrl: baseUrl, client: client);
 
-      expect(
-        () => ds.login('alumno1', 'Password123!'),
+      await expectLater(
+        ds.login('alumno1', 'Password123!'),
         throwsA(isA<ServerException>()),
       );
     });
@@ -112,8 +169,8 @@ void main() {
 
       final ds = HttpAuthDataSource(baseUrl: baseUrl, client: client);
 
-      expect(
-        () => ds.login('alumno1', 'Password123!'),
+      await expectLater(
+        ds.login('alumno1', 'Password123!'),
         throwsA(isA<ServerException>()),
       );
     });
@@ -125,9 +182,77 @@ void main() {
 
       final ds = HttpAuthDataSource(baseUrl: baseUrl, client: client);
 
-      expect(
-        () => ds.login('alumno1', 'Password123!'),
+      await expectLater(
+        ds.login('alumno1', 'Password123!'),
         throwsA(isA<NetworkException>()),
+      );
+    });
+  });
+
+  group('HttpAuthDataSource - validación de URL', () {
+    test('http con host remoto lanza ConfigException', () {
+      final client = MockClient((_) async => http.Response('', 200));
+      expect(
+        () => HttpAuthDataSource(
+          baseUrl: 'http://api.ejemplo.com/api/v1',
+          client: client,
+        ),
+        throwsA(isA<ConfigException>()),
+      );
+    });
+
+    test('http con IP remota lanza ConfigException', () {
+      final client = MockClient((_) async => http.Response('', 200));
+      expect(
+        () => HttpAuthDataSource(
+          baseUrl: 'http://192.168.1.100:3000/api/v1',
+          client: client,
+        ),
+        throwsA(isA<ConfigException>()),
+      );
+    });
+
+    test('http://localhost:3000/api/v1 es permitido', () {
+      final client = MockClient((_) async => http.Response('', 200));
+      expect(
+        () => HttpAuthDataSource(
+          baseUrl: 'http://localhost:3000/api/v1',
+          client: client,
+        ),
+        returnsNormally,
+      );
+    });
+
+    test('http://127.0.0.1:3000/api/v1 es permitido', () {
+      final client = MockClient((_) async => http.Response('', 200));
+      expect(
+        () => HttpAuthDataSource(
+          baseUrl: 'http://127.0.0.1:3000/api/v1',
+          client: client,
+        ),
+        returnsNormally,
+      );
+    });
+
+    test('http://10.0.2.2:3000/api/v1 es permitido', () {
+      final client = MockClient((_) async => http.Response('', 200));
+      expect(
+        () => HttpAuthDataSource(
+          baseUrl: 'http://10.0.2.2:3000/api/v1',
+          client: client,
+        ),
+        returnsNormally,
+      );
+    });
+
+    test('https con cualquier host es permitido', () {
+      final client = MockClient((_) async => http.Response('', 200));
+      expect(
+        () => HttpAuthDataSource(
+          baseUrl: 'https://api.ejemplo.com/api/v1',
+          client: client,
+        ),
+        returnsNormally,
       );
     });
   });

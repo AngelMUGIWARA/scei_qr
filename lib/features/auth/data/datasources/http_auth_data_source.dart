@@ -15,14 +15,17 @@ import 'auth_remote_data_source.dart';
 /// credenciales se traduce en un **mensaje genérico**.
 class HttpAuthDataSource implements AuthRemoteDataSource {
   HttpAuthDataSource({required this.baseUrl, http.Client? client})
-    : _client = client ?? http.Client();
+    : _client = client ?? http.Client() {
+    AppConfig.validateBaseUrl(baseUrl);
+  }
 
   final String baseUrl;
   final http.Client _client;
 
   @override
   Future<AuthResponseModel> login(String username, String password) async {
-    final uri = Uri.parse('$baseUrl/auth/login');
+    final normalizedBaseUrl = baseUrl.replaceFirst(RegExp(r'/+$'), '');
+    final uri = Uri.parse('$normalizedBaseUrl/auth/login');
 
     try {
       final response = await _client

@@ -57,8 +57,9 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   String? _validatePassword(String? value) {
-    if (value == null || value.isEmpty) return 'Ingresa tu contraseña';
-    if (value.length < 6) return 'Mínimo 6 caracteres';
+    if (value == null || value.isEmpty) {
+      return 'Ingresa tu contraseña';
+    }
     return null;
   }
 

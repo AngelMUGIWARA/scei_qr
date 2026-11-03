@@ -85,6 +85,27 @@ void main() {
       expect(find.text('Usuario o contraseña incorrectos'), findsOneWidget);
       expect(find.byType(HomeScreen), findsNothing);
     });
+    testWidgets(
+      'una contraseña corta muestra el error genérico sin revelar detalles',
+          (tester) async {
+        final repo = FakeAuthRepository();
+
+        await pumpLogin(tester, repo);
+
+        await ingresar(
+          tester,
+          username: 'admin',
+          password: '123',
+        );
+
+        expect(repo.loginLlamadas, 0);
+        expect(find.text('Mínimo 6 caracteres'), findsNothing);
+        expect(
+          find.text('Usuario o contraseña incorrectos'),
+          findsOneWidget,
+        );
+      },
+    );
 
     testWidgets('una cuenta sin rol Administrador es rechazada', (
       tester,

@@ -38,8 +38,8 @@ void main() {
           alLogin: (_, _) async => sesionDePrueba(),
         );
 
-        expect(
-          () => LoginUseCase(repo)('   ', 'Password123!'),
+        await expectLater(
+          LoginUseCase(repo)('   ', 'Password123!'),
           throwsA(isA<ValidationException>()),
         );
         expect(repo.loginLlamadas, 0);
@@ -53,8 +53,8 @@ void main() {
           alLogin: (_, _) async => sesionDePrueba(),
         );
 
-        expect(
-          () => LoginUseCase(repo)('alumno1', ''),
+        await expectLater(
+          LoginUseCase(repo)('alumno1', ''),
           throwsA(isA<ValidationException>()),
         );
         expect(repo.loginLlamadas, 0);
@@ -68,8 +68,8 @@ void main() {
           alLogin: (_, _) async => sesionDePrueba(),
         );
 
-        expect(
-          () => LoginUseCase(repo)('alumno1', '123'),
+        await expectLater(
+          LoginUseCase(repo)('alumno1', '123'),
           throwsA(
             isA<AuthException>().having(
               (e) => e.message,
@@ -87,8 +87,8 @@ void main() {
         alLogin: (_, _) async => throw const AuthException(),
       );
 
-      expect(
-        () => LoginUseCase(repo)('alumno1', 'Password123!'),
+      await expectLater(
+        LoginUseCase(repo)('alumno1', 'Password123!'),
         throwsA(isA<AuthException>()),
       );
     });
