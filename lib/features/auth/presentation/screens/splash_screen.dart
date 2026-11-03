@@ -21,8 +21,9 @@ class _SplashScreenState extends State<SplashScreen> {
     _provider = context.read<AuthProvider>();
     _provider.addListener(_onStatusChanged);
     // Se ejecuta después del primer frame para garantizar los listeners listos.
-    WidgetsBinding.instance
-        .addPostFrameCallback((_) => _provider.restoreSession());
+    WidgetsBinding.instance.addPostFrameCallback(
+      (_) => _provider.restoreSession(),
+    );
   }
 
   void _onStatusChanged() {

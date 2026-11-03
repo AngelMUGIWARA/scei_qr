@@ -1,6 +1,7 @@
 // Fakes compartidos de las pruebas de autenticación (HU-AL-01).
 // Este archivo no termina en _test.dart: no se ejecuta como prueba.
 
+
 import 'dart:convert';
 
 import 'package:scei_qr/core/errors/app_exception.dart';
@@ -27,13 +28,21 @@ Sesion sesionDePrueba({
   );
 }
 
-/// JWT sintético solo con `exp` (jwt_decoder no verifica la firma).
-String jwtDePrueba({required DateTime expira}) {
-  String parte(Object json) => base64Url
-      .encode(utf8.encode(jsonEncode(json)))
-      .replaceAll('=', '');
+/// JWT sintético para las pruebas.
+String jwtDePrueba({
+  required DateTime expira,
+  Map<String, dynamic>? claims,
+}) {
+  String parte(Object json) =>
+      base64Url.encode(utf8.encode(jsonEncode(json))).replaceAll('=', '');
+
   return '${parte({'alg': 'HS256', 'typ': 'JWT'})}'
-      '.${parte({'sub': 1, 'username': 'alumno1', 'exp': expira.toUtc().millisecondsSinceEpoch ~/ 1000})}'
+      '.${parte({
+    'sub': 1,
+    'username': 'alumno1',
+    ...?claims,
+    'exp': expira.toUtc().millisecondsSinceEpoch ~/ 1000,
+  })}'
       '.firma';
 }
 
@@ -89,20 +98,30 @@ class FakeRemoteDataSource implements AuthRemoteDataSource {
   }
 }
 
-/// Storage en memoria: evita el plugin nativo dentro de los tests.
+/// Almacenamiento en memoria: simula sesión unificada y claves legacy.
 class FakeStorage extends SecureStorageService {
+  String? sessionJson;
   String? token;
   String? userJson;
   bool fueLimpiado = false;
+  int saveCount = 0;
 
   @override
   Future<void> saveSession({
     required String token,
     required String userJson,
   }) async {
+    saveCount++;
     this.token = token;
     this.userJson = userJson;
+    sessionJson = jsonEncode({
+      'token': token,
+      'user': userJson,
+    });
   }
+
+  @override
+  Future<String?> readSessionJson() async => sessionJson;
 
   @override
   Future<String?> readToken() async => token;
@@ -111,21 +130,33 @@ class FakeStorage extends SecureStorageService {
   Future<String?> readUserJson() async => userJson;
 
   @override
+  Future<void> clearLegacySession() async {
+    token = null;
+    userJson = null;
+  }
+
+  @override
   Future<void> clear() async {
+    sessionJson = null;
     token = null;
     userJson = null;
     fueLimpiado = true;
   }
 }
 
-/// Respuesta 200 del backend (contrato real de scei_qr_api).
+/// Respuesta simulada del backend.
 AuthResponseModel respuestaLogin({
   String rol = 'ALUMNO',
-  String accessToken = 'token',
+  String? accessToken,
   int expiresIn = 28800,
 }) {
+  final token = accessToken ??
+      jwtDePrueba(
+        expira: DateTime.now().add(Duration(seconds: expiresIn)),
+      );
+
   return AuthResponseModel(
-    accessToken: accessToken,
+    accessToken: token,
     tokenType: 'Bearer',
     expiresIn: expiresIn,
     id: 1,

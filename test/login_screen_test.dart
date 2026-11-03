@@ -1,8 +1,10 @@
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:scei_qr/core/errors/app_exception.dart';
 import 'package:scei_qr/dominio/rol.dart';
+import 'package:scei_qr/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:scei_qr/features/auth/domain/repositories/auth_repository.dart';
 import 'package:scei_qr/features/auth/domain/usecases/login_usecase.dart';
 import 'package:scei_qr/features/auth/domain/usecases/restore_session_usecase.dart';
@@ -14,9 +16,9 @@ import 'fakes_auth.dart';
 
 void main() {
   AuthProvider providerDe(AuthRepository repo) => AuthProvider(
-        loginUseCase: LoginUseCase(repo),
-        restoreSessionUseCase: RestoreSessionUseCase(repo),
-      );
+    loginUseCase: LoginUseCase(repo),
+    restoreSessionUseCase: RestoreSessionUseCase(repo),
+  );
 
   Future<void> pumpLogin(WidgetTester tester, AuthRepository repo) async {
     await tester.pumpWidget(
@@ -40,8 +42,20 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  group('LoginScreen — HU-AL-01', () {
-    testWidgets('muestra el formulario de usuario y contraseña', (tester) async {
+  Future<void> ingresar(
+      WidgetTester tester, {
+        String username = 'admin',
+        String password = 'Password123!',
+      }) async {
+    await tester.enterText(find.byType(TextFormField).at(0), username);
+    await tester.enterText(find.byType(TextFormField).at(1), password);
+    await enviar(tester);
+  }
+
+  group('LoginScreen - HU-AD-01 y HU-GEN-01', () {
+    testWidgets('muestra el formulario de usuario y contraseña', (
+        tester,
+        ) async {
       await pumpLogin(tester, FakeAuthRepository());
 
       expect(find.text('Usuario'), findsOneWidget);
@@ -50,54 +64,97 @@ void main() {
     });
 
     testWidgets('valida campos vacíos antes de enviar', (tester) async {
-      final repo = FakeAuthRepository(alLogin: (_, _) async => sesionDePrueba());
-      await pumpLogin(tester, repo);
+      final repo = FakeAuthRepository(
+        alLogin: (_, _) async => sesionDePrueba(rol: Rol.administrador),
+      );
 
+      await pumpLogin(tester, repo);
       await enviar(tester);
 
       expect(find.text('Ingresa tu usuario'), findsOneWidget);
       expect(find.text('Ingresa tu contraseña'), findsOneWidget);
-      expect(repo.loginLlamadas, 0, reason: 'no debe llamar al backend');
+      expect(repo.loginLlamadas, 0);
       expect(find.byType(HomeScreen), findsNothing);
     });
 
-    testWidgets('credenciales inválidas muestran el mensaje genérico',
-        (tester) async {
+    testWidgets('credenciales inválidas muestran el mensaje genérico', (
+        tester,
+        ) async {
       final repo = FakeAuthRepository(
         alLogin: (_, _) async => throw const AuthException(),
       );
+
       await pumpLogin(tester, repo);
+      await ingresar(tester, username: 'admin', password: 'incorrecta');
 
-      await tester.enterText(find.byType(TextFormField).at(0), 'alumno1');
-      await tester.enterText(find.byType(TextFormField).at(1), 'Password123!');
-      await enviar(tester);
-
-      expect(
-        find.byKey(const Key('login_error_message')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('login_error_message')), findsOneWidget);
       expect(find.text('Usuario o contraseña incorrectos'), findsOneWidget);
       expect(find.byType(HomeScreen), findsNothing);
     });
 
-    testWidgets('credenciales válidas navega al home del Alumno (HU-AL-01)',
-        (tester) async {
+    testWidgets(
+      'una contraseña corta muestra el error genérico sin revelar detalles',
+          (tester) async {
+        final repo = FakeAuthRepository();
+
+        await pumpLogin(tester, repo);
+        await ingresar(
+          tester,
+          username: 'admin',
+          password: '123',
+        );
+
+        expect(repo.loginLlamadas, 0);
+        expect(find.text('Mínimo 6 caracteres'), findsNothing);
+        expect(
+          find.text('Usuario o contraseña incorrectos'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('una cuenta sin rol Administrador es rechazada cuando se exige ese rol', (
+        tester,
+        ) async {
+      final storage = FakeStorage();
+
+      final repo = AuthRepositoryImpl(
+        remote: FakeRemoteDataSource(
+          respuesta: respuestaLogin(rol: 'ALUMNO'),
+        ),
+        storage: storage,
+        rolRequerido: Rol.administrador,
+      );
+
+      await pumpLogin(tester, repo);
+      await ingresar(tester, username: 'alumno1');
+
+      expect(
+        find.text('Esta cuenta no tiene permisos de administrador'),
+        findsOneWidget,
+      );
+      expect(find.byType(HomeScreen), findsNothing);
+      expect(storage.token, isNull);
+    });
+
+    testWidgets('un alumno accede a su pantalla correspondiente', (
+        tester,
+        ) async {
       final repo = FakeAuthRepository(
         alLogin: (_, _) async => sesionDePrueba(rol: Rol.alumno),
       );
-      await pumpLogin(tester, repo);
 
-      await tester.enterText(find.byType(TextFormField).at(0), 'alumno1');
-      await tester.enterText(find.byType(TextFormField).at(1), 'Password123!');
-      await enviar(tester);
+      await pumpLogin(tester, repo);
+      await ingresar(tester, username: 'alumno1');
 
       expect(find.byType(HomeScreen), findsOneWidget);
       expect(find.text('Escanear código QR'), findsOneWidget);
       expect(find.text('Iniciar sesión'), findsNothing);
     });
 
-    testWidgets('rol Soporte técnico entra a su pantalla (HU-ST-01)',
-        (tester) async {
+    testWidgets('soporte técnico accede a su pantalla correspondiente', (
+        tester,
+        ) async {
       final repo = FakeAuthRepository(
         alLogin: (_, _) async => sesionDePrueba(
           rol: Rol.soporteTecnico,
@@ -105,17 +162,16 @@ void main() {
           nombreCompleto: 'Carlos Mena',
         ),
       );
-      await pumpLogin(tester, repo);
 
-      await tester.enterText(find.byType(TextFormField).at(0), 'soporte');
-      await tester.enterText(find.byType(TextFormField).at(1), 'Password123!');
-      await enviar(tester);
+      await pumpLogin(tester, repo);
+      await ingresar(tester, username: 'soporte');
 
       expect(find.text('Incidencias reportadas'), findsOneWidget);
     });
 
-    testWidgets('rol Administrador entra a su pantalla (HU-AD-01)',
-        (tester) async {
+    testWidgets('un administrador accede a su pantalla correspondiente', (
+        tester,
+        ) async {
       final repo = FakeAuthRepository(
         alLogin: (_, _) async => sesionDePrueba(
           rol: Rol.administrador,
@@ -123,29 +179,34 @@ void main() {
           nombreCompleto: 'Ana Torres',
         ),
       );
+
       await pumpLogin(tester, repo);
+      await ingresar(tester);
 
-      await tester.enterText(find.byType(TextFormField).at(0), 'admin');
-      await tester.enterText(find.byType(TextFormField).at(1), 'Password123!');
-      await enviar(tester);
-
-      expect(find.text('Registrar equipos de cómputo'), findsOneWidget);
-      expect(find.text('Escanear código QR'), findsNothing,
-          reason: 'un admin no ve funciones de alumno (HU-GEN-01)');
+      expect(find.byType(HomeScreen), findsOneWidget);
+      expect(find.text('Administrar equipos'), findsOneWidget);
+      expect(find.text('Escanear código QR'), findsNothing);
+      expect(find.text('Iniciar sesión'), findsNothing);
     });
 
-    testWidgets('el campo de contraseña se puede ocultar/mostrar',
-        (tester) async {
+    testWidgets('el campo de contraseña se puede ocultar y mostrar', (
+        tester,
+        ) async {
       await pumpLogin(tester, FakeAuthRepository());
 
-      final campo = tester.widget<TextField>(find.byType(TextField).at(1));
+      final campo = tester.widget<TextField>(
+        find.byType(TextField).at(1),
+      );
+
       expect(campo.obscureText, isTrue);
 
-      // Con la contraseña oculta se muestra el icono "visibility_off".
       await tester.tap(find.byIcon(Icons.visibility_off));
       await tester.pump();
 
-      final visible = tester.widget<TextField>(find.byType(TextField).at(1));
+      final visible = tester.widget<TextField>(
+        find.byType(TextField).at(1),
+      );
+
       expect(visible.obscureText, isFalse);
     });
   });

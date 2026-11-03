@@ -9,9 +9,9 @@ import 'fakes_auth.dart';
 
 void main() {
   AuthProvider crearProvider(FakeAuthRepository repo) => AuthProvider(
-        loginUseCase: LoginUseCase(repo),
-        restoreSessionUseCase: RestoreSessionUseCase(repo),
-      );
+    loginUseCase: LoginUseCase(repo),
+    restoreSessionUseCase: RestoreSessionUseCase(repo),
+  );
 
   group('AuthProvider.login', () {
     test('éxito: pasa de loading a authenticated con la sesión', () async {
@@ -88,7 +88,9 @@ void main() {
 
   group('AuthProvider.restoreSession', () {
     test('con sesión persistida queda autenticado', () async {
-      final repo = FakeAuthRepository(alRestaurar: () async => sesionDePrueba());
+      final repo = FakeAuthRepository(
+        alRestaurar: () async => sesionDePrueba(),
+      );
       final provider = crearProvider(repo);
 
       await provider.restoreSession();

@@ -48,46 +48,44 @@ class AuthResponseModel {
   }
 
   Map<String, dynamic> toJson() => {
-        'accessToken': accessToken,
-        'tokenType': tokenType,
-        'expiresIn': expiresIn,
-        'user': {
-          'id': id,
-          'username': username,
-          'fullName': fullName,
-          'rol': rol,
-        },
-      };
+    'accessToken': accessToken,
+    'tokenType': tokenType,
+    'expiresIn': expiresIn,
+    'user': {'id': id, 'username': username, 'fullName': fullName, 'rol': rol},
+  };
 
   /// Traduce el rol del backend al enum de dominio.
   ///
   /// Esta conversión pertenece a la capa de datos (`lib/dominio/rol.dart`).
   /// Un rol desconocido se trata como respuesta inválida del servidor.
   Rol _aRol() => switch (rol) {
-        'ALUMNO' => Rol.alumno,
-        'SOPORTE' => Rol.soporteTecnico,
-        'ADMIN' => Rol.administrador,
-        _ => throw const ServerException(),
-      };
+    'ALUMNO' => Rol.alumno,
+    'SOPORTE' => Rol.soporteTecnico,
+    'ADMIN' => Rol.administrador,
+    _ => throw const ServerException(),
+  };
 
   /// Mapea a la entidad de dominio [Sesion].
   ///
-  /// `expiraEn` sale del claim `exp` del JWT; si el token no se puede
-  /// decodificar se usa `expiresIn` del cuerpo de la respuesta.
-  Sesion toSession() => Sesion(
-        token: accessToken,
-        rol: _aRol(),
-        expiraEn: _calculaExpiracion(),
-        usuarioId: id,
-        username: username,
-        nombreCompleto: fullName,
-      );
-
-  DateTime _calculaExpiracion() {
-    try {
-      return JwtDecoder.getExpirationDate(accessToken);
-    } catch (_) {
-      return DateTime.now().add(Duration(seconds: expiresIn));
+  /// `expiraEn` sale del claim `exp` del JWT. Si el token no es un JWT válido
+  /// o no se puede obtener su expiración, se rechaza la respuesta.
+  Sesion toSession() {
+    if (accessToken.isEmpty) {
+      throw const ServerException();
     }
+    DateTime expiraEn;
+    try {
+      expiraEn = JwtDecoder.getExpirationDate(accessToken);
+    } catch (_) {
+      throw const ServerException();
+    }
+    return Sesion(
+      token: accessToken,
+      rol: _aRol(),
+      expiraEn: expiraEn,
+      usuarioId: id,
+      username: username,
+      nombreCompleto: fullName,
+    );
   }
 }

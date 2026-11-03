@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:jwt_decoder/jwt_decoder.dart';
 
+import '../../../../core/errors/app_exception.dart';
 import '../../../../core/storage/secure_storage_service.dart';
 import '../../../../dominio/rol.dart';
 import '../../../../dominio/sesion.dart';
@@ -17,15 +18,19 @@ class AuthRepositoryImpl implements AuthRepository {
   const AuthRepositoryImpl({
     required this.remote,
     required this.storage,
+    this.rolRequerido,
   });
 
   final AuthRemoteDataSource remote;
   final SecureStorageService storage;
+  final Rol? rolRequerido;
 
   @override
   Future<Sesion> login(String username, String password) async {
     final response = await remote.login(username, password);
     final sesion = response.toSession();
+
+    _validarRol(sesion.rol);
 
     await storage.saveSession(
       token: sesion.token,
@@ -37,34 +42,151 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<Sesion?> restoreSession() async {
+    // Intentar leer sesión unificada primero
+    final sessionJson = await storage.readSessionJson();
+    if (sessionJson != null) {
+      try {
+        final combined = jsonDecode(sessionJson) as Map<String, dynamic>;
+        final token = combined['token'] as String?;
+        final userJson = combined['user'] as String?;
+        if (token == null || userJson == null) {
+          try {
+            await storage.clear();
+          } catch (_) {}
+          return null;
+        }
+        final sesion = await _restoreFromTokenAndUserJson(token, userJson);
+        if (sesion != null) {
+          return sesion;
+        }
+        try {
+          await storage.clear();
+        } catch (_) {}
+        return null;
+      } catch (_) {
+        try {
+          await storage.clear();
+        } catch (_) {}
+        return null;
+      }
+    }
+
+    // Migración desde claves antiguas
     final token = await storage.readToken();
     final userJson = await storage.readUserJson();
 
-    if (token == null || userJson == null) return null;
+    if (token == null || userJson == null) {
+      if (token != null || userJson != null) {
+        try {
+          await storage.clear();
+        } catch (_) {}
+      }
+      return null;
+    }
 
+    final sesion = await _restoreFromTokenAndUserJson(token, userJson);
+    if (sesion == null) {
+      try {
+        await storage.clear();
+      } catch (_) {}
+      return null;
+    }
+
+    // Migrar a formato unificado si es válido
+    try {
+      await storage.saveSession(token: token, userJson: userJson);
+    } catch (_) {
+      // Si falla migración, no mantener sesión parcial
+      try {
+        await storage.clear();
+      } catch (_) {}
+      return null;
+    }
+    try {
+      await storage.clearLegacySession();
+    } catch (_) {
+      try {
+        await storage.clear();
+      } catch (_) {}
+      return null;
+    }
+    return sesion;
+  }
+
+  Future<Sesion?> _restoreFromTokenAndUserJson(
+    String token,
+    String userJson,
+  ) async {
     // CA HU-AL-01 / HU-GEN-02: token vencido o no decodificable → se descarta.
     if (!_tokenVigente(token)) {
-      await storage.clear();
       return null;
     }
 
     try {
       final json = jsonDecode(userJson) as Map<String, dynamic>;
-      return _aSesion(json, token);
+      if (!_identidadConsistente(token, json)) {
+        return null;
+      }
+      final sesion = _aSesion(json, token);
+      if (rolRequerido != null && sesion.rol != rolRequerido) {
+        return null;
+      }
+      return sesion;
     } catch (_) {
-      // Registro corrupto: se limpia para no dejar la app en un estado raro.
-      await storage.clear();
+      // Registro corrupto
       return null;
     }
   }
 
+  bool _identidadConsistente(String token, Map<String, dynamic> userJson) {
+    try {
+      final claims = JwtDecoder.decode(token);
+      // Intentar comprobar identidad con claims disponibles
+      final claimSub = claims['sub'];
+      final claimUsername =
+          claims['username'] ?? claims['user'] ?? claims['name'];
+      final userUsername = userJson['username'];
+
+      // Si hay información para comparar, debe coincidir
+      if (claimSub != null && userJson['usuarioId'] != null) {
+        final claimSubStr = claimSub.toString();
+        final userIdStr = userJson['usuarioId'].toString();
+        if (claimSubStr != userIdStr) {
+          return false;
+        }
+      }
+
+      if (claimUsername != null && userUsername != null) {
+        if (claimUsername.toString() != userUsername.toString()) {
+          return false;
+        }
+      }
+
+      // Si no hay información suficiente para comprobar identidad,
+      // no inventar validación - aceptar solo con otras validaciones
+      return true;
+    } catch (_) {
+      // Si no se puede decodificar para comparar, confiar en otras validaciones
+      // pero el token ya fue validado por vigencia
+      return true;
+    }
+  }
+
+  void _validarRol(Rol rol) {
+    if (rolRequerido != null && rol != rolRequerido) {
+      throw const AuthException(
+        'Esta cuenta no tiene permisos de administrador',
+      );
+    }
+  }
+
   Map<String, dynamic> _aJson(Sesion sesion) => {
-        'usuarioId': sesion.usuarioId,
-        'username': sesion.username,
-        'nombreCompleto': sesion.nombreCompleto,
-        'rol': sesion.rol.name,
-        'expiraEn': sesion.expiraEn.toIso8601String(),
-      };
+    'usuarioId': sesion.usuarioId,
+    'username': sesion.username,
+    'nombreCompleto': sesion.nombreCompleto,
+    'rol': sesion.rol.name,
+    'expiraEn': sesion.expiraEn.toIso8601String(),
+  };
 
   Sesion _aSesion(Map<String, dynamic> json, String token) {
     final rol = Rol.values.byName(json['rol'] as String);

@@ -7,8 +7,9 @@ import 'package:scei_qr/main.dart';
 import 'fakes_auth.dart';
 
 void main() {
-  testWidgets('la app arranca en el splash y termina en el login',
-      (WidgetTester tester) async {
+  testWidgets('la app arranca en el splash y termina en el login', (
+    WidgetTester tester,
+  ) async {
     await tester.pumpWidget(SceiQrApp(authRepository: FakeAuthRepository()));
 
     // Splash: muestra logo y spinner mientras restaura la sesión.

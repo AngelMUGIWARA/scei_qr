@@ -16,9 +16,7 @@ abstract class AppException implements Exception {
 ///
 /// CA HU-AL-01: nunca revela si falló el usuario o la contraseña.
 class AuthException extends AppException {
-  const AuthException([
-    super.message = 'Usuario o contraseña incorrectos',
-  ]);
+  const AuthException([super.message = 'Usuario o contraseña incorrectos']);
 }
 
 /// Sin conectividad, DNS o timeout.
@@ -39,5 +37,12 @@ class ServerException extends AppException {
 class ValidationException extends AppException {
   const ValidationException([
     super.message = 'Completa los campos requeridos.',
+  ]);
+}
+
+/// Error de configuración de la aplicación (URL/entorno inválidos).
+class ConfigException extends AppException {
+  const ConfigException([
+    super.message = 'Configuración inválida. Para servidores remotos debe usarse HTTPS. HTTP solo está permitido para localhost, 127.0.0.1 o 10.0.2.2.',
   ]);
 }

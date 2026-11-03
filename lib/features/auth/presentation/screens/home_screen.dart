@@ -19,13 +19,18 @@ class HomeScreen extends StatelessWidget {
     final session = context.watch<AuthProvider>().session;
 
     if (session == null) {
-      // Defensa: sin sesión no hay pantalla interna accesible.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (context.mounted) {
-          Navigator.of(context).pushNamedAndRemoveUntil('/login', (_) => false);
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            '/login',
+                (_) => false,
+          );
         }
       });
-      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
     }
 
     return switch (session.rol) {
