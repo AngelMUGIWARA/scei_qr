@@ -1,3 +1,4 @@
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -6,10 +7,10 @@ import '../rol_ui.dart';
 
 /// Formulario de inicio de sesión (HU-AL-01, HU-ST-01, HU-AD-01).
 ///
-/// - Valida campos vacíos antes de enviar (CA HU-AL-01).
-/// - Spinner mientras la petición está en curso.
-/// - Muestra un mensaje **genérico** ante credenciales inválidas,
-///   cuenta inactiva o error de red (CA HU-AL-01 / HU-ST-01).
+/// - Valida campos vacíos antes de enviar.
+/// - Muestra un indicador de carga mientras se procesa la petición.
+/// - Muestra un mensaje genérico ante credenciales inválidas,
+///   cuenta inactiva o error de red.
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
@@ -21,6 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
+
   bool _obscurePassword = true;
 
   @override
@@ -31,10 +33,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Future<void> _submit() async {
-    // 1) Validación local de campos vacíos antes de llamar al backend.
+    // Validar que los campos no estén vacíos.
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     final provider = context.read<AuthProvider>();
+
     final ok = await provider.login(
       _usernameController.text,
       _passwordController.text,
@@ -43,9 +46,11 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
 
     if (ok) {
-      // pushReplacement: no se puede volver al login con "atrás".
-      Navigator.of(context)
-          .pushReplacementNamed(provider.session!.rol.rutaHome);
+      // Redirigir según el rol del usuario autenticado.
+      // pushReplacement evita regresar al login con el botón Atrás.
+      Navigator.of(context).pushReplacementNamed(
+        provider.session!.rol.rutaHome,
+      );
     }
   }
 
@@ -53,6 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (value == null || value.trim().isEmpty) {
       return 'Ingresa tu usuario';
     }
+
     return null;
   }
 
@@ -60,6 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
     if (value == null || value.isEmpty) {
       return 'Ingresa tu contraseña';
     }
+
     return null;
   }
 
@@ -71,7 +78,10 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       body: Center(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 32,
+            vertical: 24,
+          ),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 420),
             child: Form(
@@ -81,19 +91,19 @@ class _LoginScreenState extends State<LoginScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const Icon(
-                    Icons.admin_panel_settings,
+                    Icons.qr_code_scanner,
                     size: 72,
                     color: Colors.deepPurple,
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Administración',
+                    'SCEI QR',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Acceso exclusivo para administradores',
+                    'Control de equipos de cómputo',
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
@@ -129,9 +139,11 @@ class _LoginScreenState extends State<LoginScreen> {
                               ? Icons.visibility_off
                               : Icons.visibility,
                         ),
-                        onPressed: () => setState(
-                          () => _obscurePassword = !_obscurePassword,
-                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
                       ),
                     ),
                     validator: _validatePassword,
@@ -155,10 +167,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     key: const Key('login_button'),
                     child: isLoading
                         ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                      ),
+                    )
                         : const Text('Iniciar sesión'),
                   ),
                 ],
