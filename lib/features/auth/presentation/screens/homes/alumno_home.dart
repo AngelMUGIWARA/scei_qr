@@ -20,6 +20,7 @@ class AlumnoHome extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Alumno'),
         actions: [
+          const BotonCerrarSesion(),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(child: Text(session.nombreCompleto)),

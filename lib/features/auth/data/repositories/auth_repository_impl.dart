@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:jwt_decoder/jwt_decoder.dart';
 
-import '../../../../core/errors/app_exception.dart';
 import '../../../../core/storage/secure_storage_service.dart';
 import '../../../../dominio/rol.dart';
 import '../../../../dominio/sesion.dart';
@@ -18,19 +17,15 @@ class AuthRepositoryImpl implements AuthRepository {
   const AuthRepositoryImpl({
     required this.remote,
     required this.storage,
-    this.rolRequerido,
   });
 
   final AuthRemoteDataSource remote;
   final SecureStorageService storage;
-  final Rol? rolRequerido;
 
   @override
   Future<Sesion> login(String username, String password) async {
     final response = await remote.login(username, password);
     final sesion = response.toSession();
-
-    _validarRol(sesion.rol);
 
     await storage.saveSession(
       token: sesion.token,
@@ -113,6 +108,12 @@ class AuthRepositoryImpl implements AuthRepository {
     return sesion;
   }
 
+  @override
+  Future<void> cerrarSesion() async {
+    // HU-GEN-02: elimina el token y los datos de sesión del dispositivo.
+    await storage.clear();
+  }
+
   Future<Sesion?> _restoreFromTokenAndUserJson(
     String token,
     String userJson,
@@ -128,9 +129,6 @@ class AuthRepositoryImpl implements AuthRepository {
         return null;
       }
       final sesion = _aSesion(json, token);
-      if (rolRequerido != null && sesion.rol != rolRequerido) {
-        return null;
-      }
       return sesion;
     } catch (_) {
       // Registro corrupto
@@ -169,14 +167,6 @@ class AuthRepositoryImpl implements AuthRepository {
       // Si no se puede decodificar para comparar, confiar en otras validaciones
       // pero el token ya fue validado por vigencia
       return true;
-    }
-  }
-
-  void _validarRol(Rol rol) {
-    if (rolRequerido != null && rol != rolRequerido) {
-      throw const AuthException(
-        'Esta cuenta no tiene permisos de administrador',
-      );
     }
   }
 

@@ -4,6 +4,7 @@ import '../../../../core/errors/app_exception.dart';
 import '../../../../dominio/sesion.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/restore_session_usecase.dart';
+import '../../domain/usecases/cerrar_sesion_usecase.dart';
 
 /// Estados de la sesión (arquitectura-login-sesion §2, patrón Provider).
 enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
@@ -17,10 +18,12 @@ class AuthProvider extends ChangeNotifier {
   AuthProvider({
     required this.loginUseCase,
     required this.restoreSessionUseCase,
+    required this.cerrarSesionUseCase,
   });
 
   final LoginUseCase loginUseCase;
   final RestoreSessionUseCase restoreSessionUseCase;
+  final CerrarSesionUseCase cerrarSesionUseCase;
 
   AuthStatus _status = AuthStatus.initial;
   Sesion? _session;
@@ -81,5 +84,24 @@ class AuthProvider extends ChangeNotifier {
       _errorMessage = null;
       notifyListeners();
     }
+  }
+
+  /// Cierra la sesión local (HU-GEN-02).
+  ///
+  /// Borra el token persistido y deja la sesión en `null`; la UI observa el
+  /// cambio y las rutas protegidas dejan de ser accesibles (no se puede volver
+  /// con el botón "atrás" porque se limpia la pila de navegación).
+  Future<void> cerrarSesion() async {
+    try {
+      await cerrarSesionUseCase();
+    } catch (_) {
+      // El almacenamiento seguro puede no estar disponible: aun así se cierra
+      // la sesión en memoria para no dejar la app en un estado intermedio.
+    }
+
+    _session = null;
+    _status = AuthStatus.unauthenticated;
+    _errorMessage = null;
+    notifyListeners();
   }
 }

@@ -4,8 +4,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:scei_qr/core/errors/app_exception.dart';
 import 'package:scei_qr/dominio/rol.dart';
-import 'package:scei_qr/features/auth/data/repositories/auth_repository_impl.dart';
 import 'package:scei_qr/features/auth/domain/repositories/auth_repository.dart';
+import 'package:scei_qr/features/auth/domain/usecases/cerrar_sesion_usecase.dart';
 import 'package:scei_qr/features/auth/domain/usecases/login_usecase.dart';
 import 'package:scei_qr/features/auth/domain/usecases/restore_session_usecase.dart';
 import 'package:scei_qr/features/auth/presentation/providers/auth_provider.dart';
@@ -18,6 +18,7 @@ void main() {
   AuthProvider providerDe(AuthRepository repo) => AuthProvider(
     loginUseCase: LoginUseCase(repo),
     restoreSessionUseCase: RestoreSessionUseCase(repo),
+    cerrarSesionUseCase: CerrarSesionUseCase(repo),
   );
 
   Future<void> pumpLogin(WidgetTester tester, AuthRepository repo) async {
@@ -28,9 +29,6 @@ void main() {
           home: const LoginScreen(),
           routes: {
             '/home': (_) => const HomeScreen(),
-            '/home/alumno': (_) => const HomeScreen(),
-            '/home/soporte': (_) => const HomeScreen(),
-            '/home/admin': (_) => const HomeScreen(),
           },
         ),
       ),
@@ -52,7 +50,7 @@ void main() {
     await enviar(tester);
   }
 
-  group('LoginScreen - HU-AD-01 y HU-GEN-01', () {
+  group('LoginScreen — inicio de sesión y control de acceso', () {
     testWidgets('muestra el formulario de usuario y contraseña', (
         tester,
         ) async {
@@ -112,30 +110,6 @@ void main() {
         );
       },
     );
-
-    testWidgets('una cuenta sin rol Administrador es rechazada cuando se exige ese rol', (
-        tester,
-        ) async {
-      final storage = FakeStorage();
-
-      final repo = AuthRepositoryImpl(
-        remote: FakeRemoteDataSource(
-          respuesta: respuestaLogin(rol: 'ALUMNO'),
-        ),
-        storage: storage,
-        rolRequerido: Rol.administrador,
-      );
-
-      await pumpLogin(tester, repo);
-      await ingresar(tester, username: 'alumno1');
-
-      expect(
-        find.text('Esta cuenta no tiene permisos de administrador'),
-        findsOneWidget,
-      );
-      expect(find.byType(HomeScreen), findsNothing);
-      expect(storage.token, isNull);
-    });
 
     testWidgets('un alumno accede a su pantalla correspondiente', (
         tester,
@@ -209,5 +183,43 @@ void main() {
 
       expect(visible.obscureText, isFalse);
     });
+  });
+
+  group('HU-GEN-02 — cerrar sesión en los 3 roles', () {
+    for (final (etiqueta, rol, username, textoHome) in [
+      ('alumno', Rol.alumno, 'alumno1', 'Escanear código QR'),
+      ('soporte técnico', Rol.soporteTecnico, 'soporte', 'Incidencias reportadas'),
+      ('administrador', Rol.administrador, 'admin', 'Administrar equipos'),
+    ]) {
+      testWidgets('un $etiqueta cierra sesión y vuelve al login', (
+        tester,
+      ) async {
+        final repo = FakeAuthRepository(
+          alLogin: (_, _) async => sesionDePrueba(rol: rol, username: username),
+        );
+
+        await pumpLogin(tester, repo);
+        await ingresar(tester, username: username);
+
+        // Estamos en el home del rol con la opción de cerrar sesión visible.
+        expect(find.byType(HomeScreen), findsOneWidget);
+        expect(find.text(textoHome), findsOneWidget);
+        expect(find.byKey(const Key('logout_button')), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('logout_button')));
+        await tester.pumpAndSettle();
+
+        // CA: se borró la sesión y se volvió al login.
+        expect(repo.cerrarSesionLlamadas, 1);
+        expect(find.byType(HomeScreen), findsNothing);
+        expect(find.byKey(const Key('login_button')), findsOneWidget);
+
+        // CA: no se puede volver a las pantallas internas con el botón "atrás".
+        final navigator = tester.state<NavigatorState>(
+          find.byType(Navigator),
+        );
+        expect(navigator.canPop(), isFalse);
+      });
+    }
   });
 }

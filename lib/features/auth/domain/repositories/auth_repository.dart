@@ -16,4 +16,7 @@ abstract class AuthRepository {
 
   /// Recupera la sesión persistida; `null` si no existe o el JWT expiró.
   Future<Sesion?> restoreSession();
+
+  /// Elimina la sesión persistida en el dispositivo (HU-GEN-02).
+  Future<void> cerrarSesion();
 }

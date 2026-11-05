@@ -70,6 +70,7 @@ class AdminHome extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Panel de administración'),
         actions: [
+          const BotonCerrarSesion(),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(child: Text(session.nombreCompleto)),

@@ -66,39 +66,11 @@ void main() {
       },
     );
 
-    test(
-      'rechaza una cuenta que no sea Administrador y no persiste nada',
-      () async {
-        final storage = FakeStorage();
-        final repo = AuthRepositoryImpl(
-          remote: FakeRemoteDataSource(
-            respuesta: respuestaLogin(rol: 'ALUMNO'),
-          ),
-          storage: storage,
-          rolRequerido: Rol.administrador,
-        );
-
-        expect(
-          () => repo.login('alumno1', 'Password123!'),
-          throwsA(
-            isA<AuthException>().having(
-              (e) => e.message,
-              'mensaje',
-              'Esta cuenta no tiene permisos de administrador',
-            ),
-          ),
-        );
-        expect(storage.token, isNull);
-        expect(storage.userJson, isNull);
-      },
-    );
-
     test('permite el acceso cuando la cuenta es Administrador', () async {
       final storage = FakeStorage();
       final repo = AuthRepositoryImpl(
         remote: FakeRemoteDataSource(respuesta: respuestaLogin(rol: 'ADMIN')),
         storage: storage,
-        rolRequerido: Rol.administrador,
       );
 
       final sesion = await repo.login('admin', 'Password123!');
@@ -282,28 +254,56 @@ void main() {
       expect(storage.fueLimpiado, isTrue);
     });
 
-    test(
-      'descarta una sesión persistida que no sea de Administrador',
-      () async {
-        final storage = FakeStorage()
-          ..token = jwtDePrueba(
-            expira: DateTime.now().add(const Duration(hours: 1)),
-          )
-          ..userJson = jsonEncode({
-            'usuarioId': 1,
-            'username': 'alumno1',
-            'nombreCompleto': 'Lucía Fernández',
-            'rol': 'alumno',
-          });
-        final repo = AuthRepositoryImpl(
-          remote: FakeRemoteDataSource(respuesta: respuestaLogin()),
-          storage: storage,
-          rolRequerido: Rol.administrador,
-        );
+    test('una sesión persistida de cualquier rol se restaura', () async {
+      final storage = FakeStorage()
+        ..token = jwtDePrueba(
+          expira: DateTime.now().add(const Duration(hours: 1)),
+        )
+        ..userJson = jsonEncode({
+          'usuarioId': 1,
+          'username': 'alumno1',
+          'nombreCompleto': 'Lucía Fernández',
+          'rol': 'alumno',
+        });
+      final repo = AuthRepositoryImpl(
+        remote: FakeRemoteDataSource(respuesta: respuestaLogin()),
+        storage: storage,
+      );
 
-        expect(await repo.restoreSession(), isNull);
-        expect(storage.fueLimpiado, isTrue);
-      },
-    );
+      final sesion = await repo.restoreSession();
+
+      expect(sesion, isNotNull);
+      expect(sesion!.rol, Rol.alumno);
+      expect(storage.fueLimpiado, isFalse);
+    });
+  });
+
+  group('AuthRepositoryImpl.cerrarSesion (HU-GEN-02)', () {
+    test('elimina el token y la sesión persistida', () async {
+      final storage = FakeStorage();
+      final repo = AuthRepositoryImpl(
+        remote: FakeRemoteDataSource(respuesta: respuestaLogin()),
+        storage: storage,
+      );
+
+      await repo.login('alumno1', 'Password123!');
+      expect(storage.sessionJson, isNotNull);
+
+      await repo.cerrarSesion();
+
+      expect(storage.fueLimpiado, isTrue);
+      expect(storage.sessionJson, isNull);
+      expect(storage.token, isNull);
+      expect(storage.userJson, isNull);
+    });
+
+    test('sin datos persistidos no falla', () async {
+      final repo = AuthRepositoryImpl(
+        remote: FakeRemoteDataSource(respuesta: respuestaLogin()),
+        storage: FakeStorage(),
+      );
+
+      await expectLater(repo.cerrarSesion(), completes);
+    });
   });
 }
