@@ -40,6 +40,21 @@ class ValidationException extends AppException {
   ]);
 }
 
+/// 409: el usuario, correo o matrícula ya están registrados.
+class ConflictException extends AppException {
+  const ConflictException(super.message, {this.campo});
+
+  /// Campo del formulario que originó el conflicto, si el servidor lo indica.
+  final String? campo;
+}
+
+/// 403: la cuenta autenticada no tiene permisos para la operación.
+class ForbiddenException extends AppException {
+  const ForbiddenException([
+    super.message = 'No tienes permisos para realizar esta acción.',
+  ]);
+}
+
 /// Error de configuración de la aplicación (URL/entorno inválidos).
 class ConfigException extends AppException {
   const ConfigException([

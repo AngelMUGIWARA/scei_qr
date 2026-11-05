@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../../dominio/permiso.dart';
 import '../../../../../dominio/sesion.dart';
 import '../../../../../presentacion/acceso/menu_por_rol.dart';
+import '../../../../usuarios/presentation/screens/registrar_tecnico_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../../rol_ui.dart';
 
@@ -15,6 +16,16 @@ class AdminHome extends StatelessWidget {
     final Sesion session = context.watch<AuthProvider>().session!;
 
     final opciones = <OpcionMenu>[
+      OpcionMenu(
+        titulo: 'Registrar técnico',
+        permiso: Permiso.administrarSoporte,
+        icono: Icons.person_add_alt_1,
+        alSeleccionar: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const RegistrarTecnicoScreen(),
+          ),
+        ),
+      ),
       OpcionMenu(
         titulo: 'Administrar soporte',
         permiso: Permiso.administrarSoporte,

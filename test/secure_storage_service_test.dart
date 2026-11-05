@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:flutter_secure_storage_platform_interface/flutter_secure_storage_platform_interface.dart';
@@ -47,6 +49,31 @@ void main() {
 
   tearDown(() {
     FlutterSecureStoragePlatform.instance = originalPlatform;
+  });
+
+  group('SecureStorageService.readAccessToken', () {
+    test('lee el token de la sesión unificada', () async {
+      platform.data['auth_session'] = jsonEncode({
+        'token': 'jwt-unificado',
+        'user': '{}',
+      });
+
+      expect(await service.readAccessToken(), 'jwt-unificado');
+    });
+
+    test('usa el token legacy si no hay sesión unificada', () async {
+      platform.data.remove('auth_session');
+      platform.data['auth_token'] = 'jwt-legacy';
+
+      expect(await service.readAccessToken(), 'jwt-legacy');
+    });
+
+    test('devuelve null si no hay token', () async {
+      platform.data.remove('auth_session');
+      platform.data.remove('auth_token');
+
+      expect(await service.readAccessToken(), isNull);
+    });
   });
 
   group('SecureStorageService.clear', () {
