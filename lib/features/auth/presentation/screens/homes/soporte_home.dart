@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../../dominio/sesion.dart';
 import '../../providers/auth_provider.dart';
 import '../../rol_ui.dart';
+import 'boton_cerrar_sesion.dart';
 
 /// Pantalla principal de **Soporte técnico** (placeholder de la Iteración 1).
 class SoporteHome extends StatelessWidget {
