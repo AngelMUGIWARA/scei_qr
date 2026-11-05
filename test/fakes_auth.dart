@@ -46,15 +46,23 @@ String jwtDePrueba({
       '.firma';
 }
 
-/// Repositorio falso: controla el resultado de login y restore.
+/// Repositorio falso: controla el resultado de login, restore y logout.
 class FakeAuthRepository implements AuthRepository {
-  FakeAuthRepository({this.alLogin, this.alRestaurar});
+  FakeAuthRepository({
+    this.alLogin,
+    this.alRestaurar,
+    this.falloAlCerrar = false,
+  });
 
   Future<Sesion> Function(String username, String password)? alLogin;
   Future<Sesion?> Function()? alRestaurar;
 
+  /// Simula un fallo del almacenamiento seguro al borrar la sesión.
+  bool falloAlCerrar;
+
   int loginLlamadas = 0;
   int restoreLlamadas = 0;
+  int cerrarSesionLlamadas = 0;
   String? ultimoUsername;
   String? ultimoPassword;
 
@@ -74,6 +82,12 @@ class FakeAuthRepository implements AuthRepository {
     final handler = alRestaurar;
     if (handler == null) return null;
     return handler();
+  }
+
+  @override
+  Future<void> cerrarSesion() async {
+    cerrarSesionLlamadas++;
+    if (falloAlCerrar) throw Exception('almacenamiento no disponible');
   }
 }
 

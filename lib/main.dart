@@ -8,6 +8,7 @@ import 'core/storage/secure_storage_service.dart';
 import 'features/auth/data/datasources/http_auth_data_source.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
+import 'features/auth/domain/usecases/cerrar_sesion_usecase.dart';
 import 'features/auth/domain/usecases/login_usecase.dart';
 import 'features/auth/domain/usecases/restore_session_usecase.dart';
 import 'features/auth/presentation/providers/auth_provider.dart';
@@ -48,6 +49,7 @@ class SceiQrApp extends StatelessWidget {
           create: (_) => AuthProvider(
             loginUseCase: LoginUseCase(authRepository),
             restoreSessionUseCase: RestoreSessionUseCase(authRepository),
+            cerrarSesionUseCase: CerrarSesionUseCase(authRepository),
           ),
         ),
       ],
@@ -64,10 +66,8 @@ class SceiQrApp extends StatelessWidget {
         routes: {
           '/': (_) => const SplashScreen(),
           '/login': (_) => const LoginScreen(),
+          // Home único: el ruteo por rol lo decide HomeScreen (HU-GEN-01).
           '/home': (_) => const HomeScreen(),
-          '/home/alumno': (_) => const HomeScreen(),
-          '/home/soporte': (_) => const HomeScreen(),
-          '/home/admin': (_) => const HomeScreen(),
         },
       ),
     );

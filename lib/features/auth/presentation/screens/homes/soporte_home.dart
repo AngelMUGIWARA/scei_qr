@@ -17,6 +17,7 @@ class SoporteHome extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Soporte técnico'),
         actions: [
+          const BotonCerrarSesion(),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: Center(child: Text(session.nombreCompleto)),

@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:scei_qr/core/errors/app_exception.dart';
 import 'package:scei_qr/dominio/rol.dart';
+import 'package:scei_qr/features/auth/domain/usecases/cerrar_sesion_usecase.dart';
 import 'package:scei_qr/features/auth/domain/usecases/login_usecase.dart';
 import 'package:scei_qr/features/auth/domain/usecases/restore_session_usecase.dart';
 import 'package:scei_qr/features/auth/presentation/providers/auth_provider.dart';
@@ -11,6 +12,7 @@ void main() {
   AuthProvider crearProvider(FakeAuthRepository repo) => AuthProvider(
     loginUseCase: LoginUseCase(repo),
     restoreSessionUseCase: RestoreSessionUseCase(repo),
+    cerrarSesionUseCase: CerrarSesionUseCase(repo),
   );
 
   group('AuthProvider.login', () {
@@ -107,6 +109,53 @@ void main() {
 
       expect(provider.status, AuthStatus.unauthenticated);
       expect(provider.session, isNull);
+    });
+  });
+
+  group('AuthProvider.cerrarSesion (HU-GEN-02)', () {
+    test('cierra la sesión, borra el token y queda unauthenticated', () async {
+      final repo = FakeAuthRepository(
+        alLogin: (_, _) async => sesionDePrueba(rol: Rol.soporteTecnico),
+      );
+      final provider = crearProvider(repo);
+      await provider.login('soporte', 'Password123!');
+      expect(provider.isAuthenticated, isTrue);
+
+      await provider.cerrarSesion();
+
+      expect(repo.cerrarSesionLlamadas, 1);
+      expect(provider.session, isNull);
+      expect(provider.status, AuthStatus.unauthenticated);
+      expect(provider.errorMessage, isNull);
+    });
+
+    test('si el almacenamiento falla igual cierra la sesión en memoria',
+        () async {
+      final repo = FakeAuthRepository(
+        alLogin: (_, _) async => sesionDePrueba(),
+        falloAlCerrar: true,
+      );
+      final provider = crearProvider(repo);
+      await provider.login('alumno1', 'Password123!');
+
+      await provider.cerrarSesion();
+
+      expect(repo.cerrarSesionLlamadas, 1);
+      expect(provider.session, isNull);
+      expect(provider.status, AuthStatus.unauthenticated);
+    });
+
+    test('no deja mensaje de error de un intento anterior', () async {
+      final repo = FakeAuthRepository(
+        alLogin: (_, _) async => throw const AuthException(),
+      );
+      final provider = crearProvider(repo);
+      await provider.login('alumno1', 'mal');
+      expect(provider.errorMessage, isNotNull);
+
+      await provider.cerrarSesion();
+
+      expect(provider.errorMessage, isNull);
     });
   });
 }

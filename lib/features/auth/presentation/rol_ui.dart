@@ -1,12 +1,20 @@
+import '../../../dominio/permiso.dart';
 import '../../../dominio/rol.dart';
 
-/// Traducciones de [Rol] hacia la UI: ruta principal y etiqueta visible.
+/// Traducciones de [Rol] hacia la UI: ruta principal, permiso de entrada y
+/// etiqueta visible.
 extension RolUi on Rol {
   /// Ruta interna a la pantalla principal del rol (HU-GEN-01, lado cliente).
-  String get rutaHome => switch (this) {
-    Rol.soporteTecnico => '/home/soporte',
-    Rol.administrador => '/home/admin',
-    Rol.alumno => '/home/alumno',
+  /// Es la misma para todos los roles: [HomeScreen] decide el contenido.
+  String get rutaHome => '/home';
+
+  /// Permiso mínimo que exige la pantalla principal de cada rol.
+  /// Usa la matriz de [ReglaAcceso] en lugar de validar el rol en la capa
+  /// de datos (el chequeo por rol vive en un solo lugar: el dominio).
+  Permiso get permisoHome => switch (this) {
+    Rol.alumno => Permiso.registrarUso,
+    Rol.soporteTecnico => Permiso.atenderIncidencia,
+    Rol.administrador => Permiso.administrarEquipos,
   };
 
   /// Nombre del rol para mostrar en la UI.
