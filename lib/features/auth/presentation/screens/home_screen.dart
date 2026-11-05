@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../dominio/rol.dart';
-import '../../../../../presentacion/acceso/pantalla_acceso_denegado.dart';
-import '../../../../../presentacion/acceso/ruta_protegida.dart';
+import '../../../../presentacion/acceso/pantalla_acceso_denegado.dart';
+import '../../../../presentacion/acceso/ruta_protegida.dart';
 import '../providers/auth_provider.dart';
 import '../rol_ui.dart';
 import 'homes/admin_home.dart';

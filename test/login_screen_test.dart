@@ -28,6 +28,7 @@ void main() {
         child: MaterialApp(
           home: const LoginScreen(),
           routes: {
+            '/login': (_) => const LoginScreen(),
             '/home': (_) => const HomeScreen(),
           },
         ),

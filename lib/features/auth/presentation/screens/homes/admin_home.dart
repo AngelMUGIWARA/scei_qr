@@ -7,6 +7,7 @@ import '../../../../../presentacion/acceso/menu_por_rol.dart';
 import '../../../../usuarios/presentation/screens/registrar_tecnico_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../../rol_ui.dart';
+import 'boton_cerrar_sesion.dart';
 
 class AdminHome extends StatelessWidget {
   const AdminHome({super.key});
