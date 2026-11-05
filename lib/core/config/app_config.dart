@@ -5,7 +5,9 @@ import '../errors/app_exception.dart';
 /// El [apiBaseUrl] se inyecta en tiempo de compilación:
 ///   flutter run --dart-define=API_URL=http://10.0.2.2:3000/api/v1
 ///
-/// Por defecto apunta a localhost (emulador iOS / escritorio).
+/// Por defecto apunta a localhost. En Android se llega al backend de la
+/// computadora ejecutando `dart run tool/setup_api_tunnel.dart` (adb reverse);
+/// en emulador iOS, escritorio y web, localhost funciona directamente.
 class AppConfig {
   AppConfig._();
 
