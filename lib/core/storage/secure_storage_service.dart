@@ -55,6 +55,20 @@ class SecureStorageService {
     }
   }
 
+  Future<String?> readAccessToken() async {
+    final sessionJson = await readSessionJson();
+    if (sessionJson != null) {
+      try {
+        final combined = jsonDecode(sessionJson) as Map<String, dynamic>;
+        final token = combined['token'];
+        if (token is String && token.isNotEmpty) return token;
+      } catch (_) {
+        return null;
+      }
+    }
+    return readToken();
+  }
+
   Future<String?> readUserJson() async {
     try {
       return await _storage.read(key: _userKey);

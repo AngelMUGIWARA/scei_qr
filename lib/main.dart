@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
@@ -14,6 +13,9 @@ import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/auth/presentation/screens/home_screen.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/auth/presentation/screens/splash_screen.dart';
+import 'features/usuarios/data/datasources/http_usuarios_data_source.dart';
+import 'features/usuarios/data/repositories/usuarios_repository_impl.dart';
+import 'features/usuarios/domain/repositories/usuarios_repository.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -31,19 +33,38 @@ void main() {
     storage: storage,
   );
 
-  runApp(SceiQrApp(authRepository: authRepository));
+  final usuariosRepository = UsuariosRepositoryImpl(
+    HttpUsuariosDataSource(
+      baseUrl: AppConfig.apiBaseUrl,
+      tokenProvider: storage.readAccessToken,
+      client: http.Client(),
+    ),
+  );
+
+  runApp(
+    SceiQrApp(
+      authRepository: authRepository,
+      usuariosRepository: usuariosRepository,
+    ),
+  );
 }
 
 class SceiQrApp extends StatelessWidget {
-  const SceiQrApp({super.key, required this.authRepository});
+  const SceiQrApp({
+    super.key,
+    required this.authRepository,
+    required this.usuariosRepository,
+  });
 
   final AuthRepository authRepository;
+  final UsuariosRepository usuariosRepository;
 
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
         Provider<AuthRepository>.value(value: authRepository),
+        Provider<UsuariosRepository>.value(value: usuariosRepository),
         ChangeNotifierProvider<AuthProvider>(
           create: (_) => AuthProvider(
             loginUseCase: LoginUseCase(authRepository),
@@ -55,9 +76,7 @@ class SceiQrApp extends StatelessWidget {
         title: 'SCEI QR',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.deepPurple,
-          ),
+          colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
           useMaterial3: true,
         ),
         initialRoute: '/',
