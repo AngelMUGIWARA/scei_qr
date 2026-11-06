@@ -1,6 +1,8 @@
 // Smoke test de la app con sesión restaurada por un repositorio falso.
 // (La demo del contador fue reemplazada por el login real.)
 
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:scei_qr/dominio/alta_alumno.dart';
 import 'package:scei_qr/dominio/alta_equipo.dart';
@@ -49,6 +51,13 @@ class _FakeEquiposRepository implements EquiposRepository {
 
   @override
   Future<Equipo> cambiarEstadoEquipo(int id, {required bool activo}) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<Equipo> regenerarQr(int id) async => throw UnimplementedError();
+
+  @override
+  Future<Uint8List> obtenerImagenQr(int id) async =>
       throw UnimplementedError();
 }
 

@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../../../../dominio/alta_equipo.dart';
 import '../../../../dominio/edicion_equipo.dart';
 import '../models/equipo_model.dart';
@@ -19,4 +21,11 @@ abstract class EquiposRemoteDataSource {
   );
 
   Future<EquipoModel> cambiarEstadoEquipo(int id, {required bool activo});
+
+  /// HU-AD-06: regenera el `qrToken` del equipo. El token anterior queda
+  /// invalidado (deja de resolver en `GET /equipos/qr/{qrToken}`).
+  Future<EquipoModel> regenerarQr(int id);
+
+  /// HU-AD-06: bytes del PNG del QR (`GET /equipos/{id}/qr`).
+  Future<Uint8List> obtenerImagenQr(int id);
 }

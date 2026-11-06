@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../../../../dominio/alta_equipo.dart';
 import '../../../../dominio/edicion_equipo.dart';
 import '../../../../dominio/equipo.dart';
@@ -49,4 +51,13 @@ class EquiposRepositoryImpl implements EquiposRepository {
     final model = await remote.cambiarEstadoEquipo(id, activo: activo);
     return model.toEntity();
   }
+
+  @override
+  Future<Equipo> regenerarQr(int id) async {
+    final model = await remote.regenerarQr(id);
+    return model.toEntity();
+  }
+
+  @override
+  Future<Uint8List> obtenerImagenQr(int id) => remote.obtenerImagenQr(id);
 }

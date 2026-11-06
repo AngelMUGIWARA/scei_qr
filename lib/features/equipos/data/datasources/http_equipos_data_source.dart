@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 
@@ -136,6 +137,31 @@ class HttpEquiposDataSource implements EquiposRemoteDataSource {
     final uri = Uri.parse('$_normalizedBaseUrl/equipos/$id');
     final response = await _solicitar('PATCH', uri, body: {'activo': activo});
     return _mapEquipoResponse(response);
+  }
+
+  /// HU-AD-06: `POST /equipos/{id}/regenerar-qr` (201 con el equipo y el
+  /// `qrToken` nuevo; el anterior queda invalidado en el servidor).
+  @override
+  Future<EquipoModel> regenerarQr(int id) async {
+    final uri = Uri.parse('$_normalizedBaseUrl/equipos/$id/regenerar-qr');
+    final response = await _solicitar('POST', uri);
+    return _mapEquipoResponse(response);
+  }
+
+  /// HU-AD-06: `GET /equipos/{id}/qr` → PNG (ADMIN). Devuelve los bytes
+  /// tal cual para `Image.memory`.
+  @override
+  Future<Uint8List> obtenerImagenQr(int id) async {
+    final uri = Uri.parse('$_normalizedBaseUrl/equipos/$id/qr');
+    final response = await _solicitar('GET', uri);
+
+    if (response.statusCode != 200) {
+      _throwHttpError(response);
+    }
+
+    final bytes = response.bodyBytes;
+    if (bytes.isEmpty) throw const ServerException();
+    return bytes;
   }
 
   Future<http.Response> _solicitar(
