@@ -6,6 +6,7 @@ import 'package:scei_qr/dominio/alta_alumno.dart';
 import 'package:scei_qr/dominio/alta_equipo.dart';
 import 'package:scei_qr/dominio/alta_tecnico.dart';
 import 'package:scei_qr/dominio/alumno.dart';
+import 'package:scei_qr/dominio/edicion_equipo.dart';
 import 'package:scei_qr/dominio/edicion_tecnico.dart';
 import 'package:scei_qr/dominio/equipo.dart';
 import 'package:scei_qr/dominio/tecnico.dart';
@@ -29,6 +30,26 @@ class _FakeEquiposRepository implements EquiposRepository {
       activo: true,
     );
   }
+
+  @override
+  Future<List<Equipo>> listarEquipos({
+    String? q,
+    String? ubicacion,
+    bool? activo,
+  }) async => const [];
+
+  @override
+  Future<Equipo> obtenerEquipoPorId(int id) async => throw UnimplementedError();
+
+  @override
+  Future<Equipo> actualizarEquipo(
+    int id,
+    SolicitudEdicionEquipo solicitud,
+  ) async => throw UnimplementedError();
+
+  @override
+  Future<Equipo> cambiarEstadoEquipo(int id, {required bool activo}) async =>
+      throw UnimplementedError();
 }
 
 class _FakeUsuariosRepository implements UsuariosRepository {

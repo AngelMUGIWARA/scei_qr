@@ -5,6 +5,7 @@ import '../../../../../dominio/permiso.dart';
 import '../../../../../dominio/sesion.dart';
 import '../../../../../presentacion/acceso/menu_por_rol.dart';
 import '../../../../alumnos/presentation/screens/gestion_alumnos_screen.dart';
+import '../../../../equipos/presentation/screens/listar_equipos_screen.dart';
 import '../../../../equipos/presentation/screens/registrar_equipo_screen.dart';
 import '../../../../usuarios/presentation/screens/administrar_tecnicos_screen.dart';
 import '../../../../usuarios/presentation/screens/registrar_tecnico_screen.dart';
@@ -62,7 +63,9 @@ class AdminHome extends StatelessWidget {
         titulo: 'Administrar equipos',
         permiso: Permiso.administrarEquipos,
         icono: Icons.computer,
-        alSeleccionar: () => _proximamente(context, 'Administrar equipos'),
+        alSeleccionar: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(builder: (_) => const ListarEquiposScreen()),
+        ),
       ),
       OpcionMenu(
         titulo: 'Gestionar códigos QR',

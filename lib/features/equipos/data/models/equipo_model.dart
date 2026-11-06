@@ -6,26 +6,39 @@ class EquipoModel {
     required this.identificador,
     required this.ubicacion,
     required this.activo,
+    this.nombre,
     this.descripcion,
     this.fechaAlta,
   });
 
   final int id;
   final String identificador;
+  final String? nombre;
   final String ubicacion;
   final String? descripcion;
   final bool activo;
   final DateTime? fechaAlta;
 
-  /// Respuesta de `POST /equipos` (equipment_public en `serializers.py`).
+  /// Alias explícito del contrato: `codigo` en la API.
+  String get codigo => identificador;
+
+  /// Respuesta de `POST /equipos` y de `GET /equipos` (equipment_public en
+  /// `serializers.py`).
   ///
-  /// `nombre` y `qrToken` no se mapean: no pertenecen al alcance de HU-AD-04
-  /// (el QR es HU-AD-06 y `nombre` es un TODO del contrato, ver
-  /// `toCreateEquipoPayload`).
+  /// `qrToken` no se mapea: pertenece a HU-AD-06 y no se utiliza en la
+  /// administración de equipos.
   factory EquipoModel.fromJson(Map<String, dynamic> json) {
+    final rawId = json['id'];
+    final rawCodigo = json['codigo'];
+    if (rawId is! num || rawCodigo is! String) {
+      throw const FormatException('Respuesta de equipo inválida');
+    }
+
+    final rawNombre = json['nombre'];
     return EquipoModel(
-      id: (json['id'] as num).toInt(),
-      identificador: json['codigo'] as String,
+      id: rawId.toInt(),
+      identificador: rawCodigo,
+      nombre: rawNombre is String ? rawNombre.trim() : null,
       ubicacion: json['ubicacion'] as String,
       descripcion: json['descripcion'] as String?,
       // Se exige el campo (sin `?? true`): la verificación del CA "Al guardar,
@@ -38,6 +51,7 @@ class EquipoModel {
   Equipo toEntity() => Equipo(
     id: id,
     identificador: identificador,
+    nombre: nombre,
     ubicacion: ubicacion,
     descripcion: descripcion,
     activo: activo,

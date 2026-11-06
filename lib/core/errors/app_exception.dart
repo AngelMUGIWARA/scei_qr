@@ -40,12 +40,18 @@ class ValidationException extends AppException {
   ]);
 }
 
-/// 409: el usuario, correo o matrícula ya están registrados.
+/// 409: un dato único ya está registrado (usuario, correo, matrícula o
+/// identificador de equipo).
 class ConflictException extends AppException {
   const ConflictException(super.message, {this.campo});
 
   /// Campo del formulario que originó el conflicto, si el servidor lo indica.
   final String? campo;
+}
+
+/// 404: el recurso solicitado no existe.
+class NotFoundException extends AppException {
+  const NotFoundException([super.message = 'El recurso solicitado no existe.']);
 }
 
 /// 403: la cuenta autenticada no tiene permisos para la operación.
