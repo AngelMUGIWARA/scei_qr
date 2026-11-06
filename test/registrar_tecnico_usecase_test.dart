@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:scei_qr/core/errors/app_exception.dart';
 import 'package:scei_qr/dominio/alta_tecnico.dart';
+import 'package:scei_qr/dominio/edicion_tecnico.dart';
 import 'package:scei_qr/dominio/tecnico.dart';
 import 'package:scei_qr/features/usuarios/domain/repositories/usuarios_repository.dart';
 import 'package:scei_qr/features/usuarios/domain/usecases/registrar_tecnico_usecase.dart';
@@ -28,6 +29,18 @@ class FakeUsuariosRepository implements UsuariosRepository {
     }
     return handler(solicitud);
   }
+
+  @override
+  Future<List<Tecnico>> listarTecnicos({String? busqueda, bool? activo}) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Tecnico> editarTecnico(int id, SolicitudEdicionTecnico solicitud) =>
+      throw UnimplementedError();
+
+  @override
+  Future<Tecnico> cambiarEstadoTecnico(int id, {required bool activo}) =>
+      throw UnimplementedError();
 }
 
 void main() {
