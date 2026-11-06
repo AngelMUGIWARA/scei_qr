@@ -60,4 +60,10 @@ class EquiposRepositoryImpl implements EquiposRepository {
 
   @override
   Future<Uint8List> obtenerImagenQr(int id) => remote.obtenerImagenQr(id);
+
+  @override
+  Future<Equipo> resolverQr(String qrToken) async {
+    final model = await remote.resolverQr(qrToken);
+    return model.toEntity();
+  }
 }

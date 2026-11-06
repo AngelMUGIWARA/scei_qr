@@ -24,4 +24,9 @@ abstract class EquiposRepository {
 
   /// HU-AD-06: bytes del PNG del QR del equipo.
   Future<Uint8List> obtenerImagenQr(int id);
+
+  /// HU-AL-02: resuelve un `qrToken` escaneado al equipo que lo tiene
+  /// asignado. Lanza [NotFoundException] si el token no existe o si el
+  /// equipo está dado de baja.
+  Future<Equipo> resolverQr(String qrToken);
 }

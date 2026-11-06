@@ -164,6 +164,23 @@ class HttpEquiposDataSource implements EquiposRemoteDataSource {
     return bytes;
   }
 
+  /// HU-AL-02: `GET /equipos/qr/{qrToken}` → valida el QR escaneado y
+  /// devuelve el equipo (404 si el token no existe o el equipo está
+  /// dado de baja).
+  @override
+  Future<EquipoModel> resolverQr(String qrToken) async {
+    final token = qrToken.trim();
+    if (token.isEmpty) {
+      throw const NotFoundException('El código QR escaneado no es válido.');
+    }
+
+    final uri = Uri.parse(
+      '$_normalizedBaseUrl/equipos/qr/${Uri.encodeComponent(token)}',
+    );
+    final response = await _solicitar('GET', uri);
+    return _mapEquipoResponse(response);
+  }
+
   Future<http.Response> _solicitar(
     String method,
     Uri uri, {

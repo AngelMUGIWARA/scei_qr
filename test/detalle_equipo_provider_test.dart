@@ -35,6 +35,10 @@ class FakeEquiposRepository implements EquiposRepository {
   }
 
   @override
+  Future<Equipo> resolverQr(String qrToken) async =>
+      throw UnimplementedError();
+
+  @override
   Future<Equipo> regenerarQr(int id) async {
     regeneraciones++;
     if (errorRegenerar != null) throw errorRegenerar!;
