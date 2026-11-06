@@ -9,6 +9,7 @@ class EquipoModel {
     this.nombre,
     this.descripcion,
     this.fechaAlta,
+    this.qrToken,
   });
 
   final int id;
@@ -19,14 +20,14 @@ class EquipoModel {
   final bool activo;
   final DateTime? fechaAlta;
 
+  /// Payload del QR (HU-AD-06). Backend: `qrToken` en `equipment_public`.
+  final String? qrToken;
+
   /// Alias explícito del contrato: `codigo` en la API.
   String get codigo => identificador;
 
   /// Respuesta de `POST /equipos` y de `GET /equipos` (equipment_public en
   /// `serializers.py`).
-  ///
-  /// `qrToken` no se mapea: pertenece a HU-AD-06 y no se utiliza en la
-  /// administración de equipos.
   factory EquipoModel.fromJson(Map<String, dynamic> json) {
     final rawId = json['id'];
     final rawCodigo = json['codigo'];
@@ -35,6 +36,7 @@ class EquipoModel {
     }
 
     final rawNombre = json['nombre'];
+    final rawQrToken = json['qrToken'];
     return EquipoModel(
       id: rawId.toInt(),
       identificador: rawCodigo,
@@ -45,6 +47,9 @@ class EquipoModel {
       // el equipo queda con estado Activo" depende de que el servidor lo envíe.
       activo: json['activo'] as bool,
       fechaAlta: _fecha(json['createdAt']),
+      qrToken: rawQrToken is String && rawQrToken.isNotEmpty
+          ? rawQrToken
+          : null,
     );
   }
 
@@ -56,6 +61,7 @@ class EquipoModel {
     descripcion: descripcion,
     activo: activo,
     fechaAlta: fechaAlta,
+    qrToken: qrToken,
   );
 
   static DateTime? _fecha(Object? value) {

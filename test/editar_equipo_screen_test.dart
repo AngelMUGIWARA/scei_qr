@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:scei_qr/dominio/alta_equipo.dart';
@@ -49,6 +51,13 @@ class FakeEquiposRepository implements EquiposRepository {
 
   @override
   Future<Equipo> registrarEquipo(SolicitudAltaEquipo solicitud) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<Equipo> regenerarQr(int id) async => throw UnimplementedError();
+
+  @override
+  Future<Uint8List> obtenerImagenQr(int id) async =>
       throw UnimplementedError();
 }
 

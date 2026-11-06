@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:scei_qr/core/errors/app_exception.dart';
 import 'package:scei_qr/dominio/alta_equipo.dart';
@@ -44,6 +46,13 @@ class FakeRemoteDataSource implements EquiposRemoteDataSource {
     int id, {
     required bool activo,
   }) async => throw UnimplementedError();
+
+  @override
+  Future<EquipoModel> regenerarQr(int id) async => throw UnimplementedError();
+
+  @override
+  Future<Uint8List> obtenerImagenQr(int id) async =>
+      throw UnimplementedError();
 }
 
 void main() {

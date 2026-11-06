@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -86,7 +89,19 @@ class FakeEquiposRepository implements EquiposRepository {
   @override
   Future<Equipo> registrarEquipo(SolicitudAltaEquipo solicitud) async =>
       throw UnimplementedError();
+
+  @override
+  Future<Equipo> regenerarQr(int id) async => throw UnimplementedError();
+
+  @override
+  Future<Uint8List> obtenerImagenQr(int id) async => _pngDetalle;
 }
+
+/// PNG 1x1 válido para Image.memory en el detalle (HU-AD-06).
+final Uint8List _pngDetalle = base64.decode(
+  'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk'
+  'YPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
+);
 
 const activo = Equipo(
   id: 1,
@@ -215,6 +230,19 @@ void main() {
 
       expect(repo.ultimoEstadoSolicitado, isNull);
       expect(find.text('Activo'), findsOneWidget);
+    });
+
+    testWidgets('al tocar la tarjeta abre el detalle con el QR (HU-AD-06)', (
+      tester,
+    ) async {
+      await pumpPantalla(tester);
+
+      await tester.tap(find.byKey(const ValueKey('equipo_card_1')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Detalle del equipo'), findsOneWidget);
+      expect(find.byKey(const Key('detalle_equipo_qr_imagen')), findsOneWidget);
+      expect(find.byKey(const Key('detalle_equipo_regenerar_qr')), findsOneWidget);
     });
   });
 }

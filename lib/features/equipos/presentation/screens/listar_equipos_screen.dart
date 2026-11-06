@@ -6,6 +6,7 @@ import '../../domain/repositories/equipos_repository.dart';
 import '../../domain/usecases/cambiar_estado_equipo_usecase.dart';
 import '../../domain/usecases/listar_equipos_usecase.dart';
 import '../providers/listar_equipos_provider.dart';
+import 'detalle_equipo_screen.dart';
 import 'editar_equipo_screen.dart';
 
 enum _FiltroEstado { todos, activos, inactivos }
@@ -167,6 +168,7 @@ class _ListarEquiposViewState extends State<_ListarEquiposView> {
         return _EquipoCard(
           equipo: equipo,
           procesando: provider.procesandoId == equipo.id,
+          onAbrirDetalle: () => _abrirDetalle(context, equipo),
           onEditar: () => _abrirEditar(context, provider, equipo),
           onCambiarEstado: () =>
               _confirmarCambioEstado(context, provider, equipo),
@@ -179,6 +181,19 @@ class _ListarEquiposViewState extends State<_ListarEquiposView> {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
       children: [child],
+    );
+  }
+
+  /// HU-AD-06: al tocar la tarjeta se abre el detalle, donde se visualiza
+  /// el QR del equipo.
+  void _abrirDetalle(BuildContext context, Equipo equipo) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => DetalleEquipoScreen(
+          equipoId: equipo.id,
+          equipoInicial: equipo,
+        ),
+      ),
     );
   }
 
@@ -360,12 +375,14 @@ class _EquipoCard extends StatelessWidget {
   const _EquipoCard({
     required this.equipo,
     required this.procesando,
+    required this.onAbrirDetalle,
     required this.onEditar,
     required this.onCambiarEstado,
   });
 
   final Equipo equipo;
   final bool procesando;
+  final VoidCallback onAbrirDetalle;
   final VoidCallback onEditar;
   final VoidCallback onCambiarEstado;
 
@@ -380,6 +397,8 @@ class _EquipoCard extends StatelessWidget {
     return Card(
       key: ValueKey('equipo_card_${equipo.id}'),
       child: ListTile(
+        // HU-AD-06: la tarjeta abre el detalle (visualización del QR).
+        onTap: onAbrirDetalle,
         leading: CircleAvatar(
           backgroundColor: equipo.activo
               ? colorScheme.primaryContainer

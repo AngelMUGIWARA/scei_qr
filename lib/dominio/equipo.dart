@@ -16,6 +16,7 @@ class Equipo {
     this.nombre,
     this.descripcion,
     this.fechaAlta,
+    this.qrToken,
   });
 
   final int id;
@@ -41,6 +42,14 @@ class Equipo {
 
   final DateTime? fechaAlta;
 
+  /// Payload codificado en el QR del equipo (HU-AD-06: "El QR codifica un
+  /// identificador estable y único"). Equivale a `qrToken` en el backend.
+  ///
+  /// Se regenera solo con `POST /equipos/{id}/regenerar-qr`; al regenerarlo
+  /// el anterior deja de resolver (invalidado). Nulo cuando la respuesta no
+  /// lo incluyó.
+  final String? qrToken;
+
   /// Nombre visible para la UI, con compatibilidad para registros donde el
   /// backend no devolvió un nombre distinto al código.
   String get nombreVisible {
@@ -58,6 +67,7 @@ class Equipo {
     String? descripcion,
     bool? activo,
     DateTime? fechaAlta,
+    String? qrToken,
   }) {
     return Equipo(
       id: id ?? this.id,
@@ -67,6 +77,7 @@ class Equipo {
       descripcion: descripcion ?? this.descripcion,
       activo: activo ?? this.activo,
       fechaAlta: fechaAlta ?? this.fechaAlta,
+      qrToken: qrToken ?? this.qrToken,
     );
   }
 }
