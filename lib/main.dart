@@ -4,6 +4,9 @@ import 'package:provider/provider.dart';
 
 import 'core/config/app_config.dart';
 import 'core/storage/secure_storage_service.dart';
+import 'features/alumnos/data/datasources/http_alumnos_data_source.dart';
+import 'features/alumnos/data/repositories/alumnos_repository_impl.dart';
+import 'features/alumnos/domain/repositories/alumnos_repository.dart';
 import 'features/auth/data/datasources/http_auth_data_source.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
@@ -54,11 +57,21 @@ void main() {
     ),
   );
 
+  // HU-AD-12: alta, baja lógica y conservación del historial de alumnos.
+  final alumnosRepository = AlumnosRepositoryImpl(
+    HttpAlumnosDataSource(
+      baseUrl: AppConfig.apiBaseUrl,
+      tokenProvider: storage.readAccessToken,
+      client: http.Client(),
+    ),
+  );
+
   runApp(
     SceiQrApp(
       authRepository: authRepository,
       usuariosRepository: usuariosRepository,
       equiposRepository: equiposRepository,
+      alumnosRepository: alumnosRepository,
     ),
   );
 }
@@ -69,11 +82,13 @@ class SceiQrApp extends StatelessWidget {
     required this.authRepository,
     required this.usuariosRepository,
     required this.equiposRepository,
+    required this.alumnosRepository,
   });
 
   final AuthRepository authRepository;
   final UsuariosRepository usuariosRepository;
   final EquiposRepository equiposRepository;
+  final AlumnosRepository alumnosRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -82,6 +97,7 @@ class SceiQrApp extends StatelessWidget {
         Provider<AuthRepository>.value(value: authRepository),
         Provider<UsuariosRepository>.value(value: usuariosRepository),
         Provider<EquiposRepository>.value(value: equiposRepository),
+        Provider<AlumnosRepository>.value(value: alumnosRepository),
         ChangeNotifierProvider<AuthProvider>(
           create: (_) => AuthProvider(
             loginUseCase: LoginUseCase(authRepository),
