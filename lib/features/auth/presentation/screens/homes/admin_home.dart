@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../../dominio/permiso.dart';
 import '../../../../../dominio/sesion.dart';
 import '../../../../../presentacion/acceso/menu_por_rol.dart';
+import '../../../../equipos/presentation/screens/registrar_equipo_screen.dart';
 import '../../../../usuarios/presentation/screens/registrar_tecnico_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../../rol_ui.dart';
@@ -38,6 +39,16 @@ class AdminHome extends StatelessWidget {
         permiso: Permiso.gestionarAlumnos,
         icono: Icons.school,
         alSeleccionar: () => _proximamente(context, 'Gestionar alumnos'),
+      ),
+      OpcionMenu(
+        titulo: 'Registrar equipo',
+        permiso: Permiso.administrarEquipos,
+        icono: Icons.add_to_queue,
+        alSeleccionar: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const RegistrarEquipoScreen(),
+          ),
+        ),
       ),
       OpcionMenu(
         titulo: 'Administrar equipos',
