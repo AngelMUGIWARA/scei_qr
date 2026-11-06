@@ -14,6 +14,9 @@ import 'features/auth/presentation/providers/auth_provider.dart';
 import 'features/auth/presentation/screens/home_screen.dart';
 import 'features/auth/presentation/screens/login_screen.dart';
 import 'features/auth/presentation/screens/splash_screen.dart';
+import 'features/equipos/data/datasources/http_equipos_data_source.dart';
+import 'features/equipos/data/repositories/equipos_repository_impl.dart';
+import 'features/equipos/domain/repositories/equipos_repository.dart';
 import 'features/usuarios/data/datasources/http_usuarios_data_source.dart';
 import 'features/usuarios/data/repositories/usuarios_repository_impl.dart';
 import 'features/usuarios/domain/repositories/usuarios_repository.dart';
@@ -42,10 +45,20 @@ void main() {
     ),
   );
 
+  // HU-AD-04: alta de equipos de cómputo.
+  final equiposRepository = EquiposRepositoryImpl(
+    HttpEquiposDataSource(
+      baseUrl: AppConfig.apiBaseUrl,
+      tokenProvider: storage.readAccessToken,
+      client: http.Client(),
+    ),
+  );
+
   runApp(
     SceiQrApp(
       authRepository: authRepository,
       usuariosRepository: usuariosRepository,
+      equiposRepository: equiposRepository,
     ),
   );
 }
@@ -55,10 +68,12 @@ class SceiQrApp extends StatelessWidget {
     super.key,
     required this.authRepository,
     required this.usuariosRepository,
+    required this.equiposRepository,
   });
 
   final AuthRepository authRepository;
   final UsuariosRepository usuariosRepository;
+  final EquiposRepository equiposRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +81,7 @@ class SceiQrApp extends StatelessWidget {
       providers: [
         Provider<AuthRepository>.value(value: authRepository),
         Provider<UsuariosRepository>.value(value: usuariosRepository),
+        Provider<EquiposRepository>.value(value: equiposRepository),
         ChangeNotifierProvider<AuthProvider>(
           create: (_) => AuthProvider(
             loginUseCase: LoginUseCase(authRepository),
