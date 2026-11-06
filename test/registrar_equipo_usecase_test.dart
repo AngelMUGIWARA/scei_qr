@@ -57,6 +57,10 @@ class FakeEquiposRepository implements EquiposRepository {
   @override
   Future<Uint8List> obtenerImagenQr(int id) async =>
       throw UnimplementedError();
+
+  @override
+  Future<Equipo> resolverQr(String qrToken) async =>
+      throw UnimplementedError();
 }
 
 void main() {

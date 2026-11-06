@@ -226,4 +226,123 @@ void main() {
       );
     });
   });
+
+  group('HttpEquiposDataSource.resolverQr', () {
+    test('GET /equipos/qr/{token} con 200 devuelve el equipo', () async {
+      final client = MockClient((request) async {
+        expect(request.method, 'GET');
+        expect(
+          request.url.toString(),
+          '$baseUrl/equipos/qr/qr-token-valido',
+        );
+        expect(request.headers['Authorization'], 'Bearer jwt-admin');
+        return http.Response(
+          jsonEncode(cuerpoEquipo(qrToken: 'qr-token-valido')),
+          200,
+        );
+      });
+
+      final model = await datasource(client).resolverQr('qr-token-valido');
+
+      expect(model.id, 12);
+      expect(model.qrToken, 'qr-token-valido');
+      expect(model.identificador, 'LAB-PC-001');
+    });
+
+    test('codifica correctamente caracteres especiales en el token', () async {
+      final client = MockClient((request) async {
+        expect(request.method, 'GET');
+        expect(
+          request.url.toString(),
+          '$baseUrl/equipos/qr/abc%2F123%3F%23test',
+        );
+        return http.Response(
+          jsonEncode(cuerpoEquipo(qrToken: 'abc/123?#test')),
+          200,
+        );
+      });
+
+      final model = await datasource(client).resolverQr('abc/123?#test');
+      expect(model.qrToken, 'abc/123?#test');
+    });
+
+    test('token vacío o con espacios lanza NotFoundException sin llamar a la red', () async {
+      var llamadas = 0;
+      final client = MockClient((_) async {
+        llamadas++;
+        return http.Response('{}', 200);
+      });
+
+      await expectLater(
+        datasource(client).resolverQr('   '),
+        throwsA(
+          isA<NotFoundException>().having(
+            (e) => e.message,
+            'message',
+            'El código QR escaneado no es válido.',
+          ),
+        ),
+      );
+      expect(llamadas, 0);
+    });
+
+    test('404 produce NotFoundException con el mensaje del backend', () async {
+      final client = MockClient(
+        (_) async => http.Response(
+          jsonEncode({'message': 'El QR no está registrado o el equipo está dado de baja'}),
+          404,
+        ),
+      );
+
+      await expectLater(
+        datasource(client).resolverQr('qr-inexistente'),
+        throwsA(
+          isA<NotFoundException>().having(
+            (e) => e.message,
+            'message',
+            'El QR no está registrado o el equipo está dado de baja',
+          ),
+        ),
+      );
+    });
+
+    test('401 produce AuthException', () async {
+      final client = MockClient(
+        (_) async => http.Response(
+          jsonEncode({'statusCode': 401, 'message': 'Unauthorized'}),
+          401,
+        ),
+      );
+
+      await expectLater(
+        datasource(client).resolverQr('qr-token'),
+        throwsA(isA<AuthException>()),
+      );
+    });
+
+    test('403 produce ForbiddenException', () async {
+      final client = MockClient(
+        (_) async => http.Response(
+          jsonEncode({'statusCode': 403, 'message': 'Forbidden'}),
+          403,
+        ),
+      );
+
+      await expectLater(
+        datasource(client).resolverQr('qr-token'),
+        throwsA(isA<ForbiddenException>()),
+      );
+    });
+
+    test('500 produce ServerException', () async {
+      final client = MockClient(
+        (_) async => http.Response('{"statusCode":500}', 500),
+      );
+
+      await expectLater(
+        datasource(client).resolverQr('qr-token'),
+        throwsA(isA<ServerException>()),
+      );
+    });
+  });
 }
