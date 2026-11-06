@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:scei_qr/core/errors/app_exception.dart';
 import 'package:scei_qr/dominio/alta_equipo.dart';
+import 'package:scei_qr/dominio/edicion_equipo.dart';
 import 'package:scei_qr/dominio/equipo.dart';
 import 'package:scei_qr/features/equipos/domain/repositories/equipos_repository.dart';
 import 'package:scei_qr/features/equipos/domain/usecases/registrar_equipo_usecase.dart';
@@ -32,6 +33,26 @@ class FakeEquiposRepository implements EquiposRepository {
     }
     return handler(solicitud);
   }
+
+  @override
+  Future<List<Equipo>> listarEquipos({
+    String? q,
+    String? ubicacion,
+    bool? activo,
+  }) async => throw UnimplementedError();
+
+  @override
+  Future<Equipo> obtenerEquipoPorId(int id) async => throw UnimplementedError();
+
+  @override
+  Future<Equipo> actualizarEquipo(
+    int id,
+    SolicitudEdicionEquipo solicitud,
+  ) async => throw UnimplementedError();
+
+  @override
+  Future<Equipo> cambiarEstadoEquipo(int id, {required bool activo}) async =>
+      throw UnimplementedError();
 }
 
 void main() {

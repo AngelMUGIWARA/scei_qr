@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:scei_qr/core/errors/app_exception.dart';
 import 'package:scei_qr/dominio/alta_equipo.dart';
+import 'package:scei_qr/dominio/edicion_equipo.dart';
 import 'package:scei_qr/features/equipos/data/datasources/equipos_remote_data_source.dart';
 import 'package:scei_qr/features/equipos/data/models/equipo_model.dart';
 import 'package:scei_qr/features/equipos/data/repositories/equipos_repository_impl.dart';
@@ -20,6 +21,29 @@ class FakeRemoteDataSource implements EquiposRemoteDataSource {
     if (error != null) throw error!;
     return respuesta!;
   }
+
+  @override
+  Future<List<EquipoModel>> listarEquipos({
+    String? q,
+    String? ubicacion,
+    bool? activo,
+  }) async => const [];
+
+  @override
+  Future<EquipoModel> obtenerEquipoPorId(int id) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<EquipoModel> actualizarEquipo(
+    int id,
+    SolicitudEdicionEquipo solicitud,
+  ) async => throw UnimplementedError();
+
+  @override
+  Future<EquipoModel> cambiarEstadoEquipo(
+    int id, {
+    required bool activo,
+  }) async => throw UnimplementedError();
 }
 
 void main() {
