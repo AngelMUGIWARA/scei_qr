@@ -13,8 +13,14 @@ class Alumno {
     required this.usuario,
     required this.activo,
     required this.fechaAlta,
+    this.id,
     this.fechaBaja,
   });
+
+  /// Identificador del usuario en el backend. Es `null` mientras la cuenta
+  /// aún no se ha guardado (alta local) y obligatorio para operar sobre ella
+  /// (baja lógica: `PATCH /usuarios/:id`).
+  final int? id;
 
   final String matricula;
   final String nombre;
@@ -30,6 +36,7 @@ class Alumno {
 
   /// Baja lógica: conserva los datos y solo marca la cuenta como inactiva.
   Alumno darDeBaja(DateTime fecha) => Alumno(
+    id: id,
     matricula: matricula,
     nombre: nombre,
     correoInstitucional: correoInstitucional,
@@ -41,6 +48,7 @@ class Alumno {
 
   /// Reactiva una cuenta dada de baja sin tocar sus datos históricos.
   Alumno reactivar() => Alumno(
+    id: id,
     matricula: matricula,
     nombre: nombre,
     correoInstitucional: correoInstitucional,
