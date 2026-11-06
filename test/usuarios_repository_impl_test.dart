@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:scei_qr/core/errors/app_exception.dart';
 import 'package:scei_qr/dominio/alta_tecnico.dart';
+import 'package:scei_qr/dominio/edicion_tecnico.dart';
 import 'package:scei_qr/features/usuarios/data/datasources/usuarios_remote_data_source.dart';
 import 'package:scei_qr/features/usuarios/data/models/tecnico_model.dart';
 import 'package:scei_qr/features/usuarios/data/repositories/usuarios_repository_impl.dart';
@@ -19,6 +20,30 @@ class FakeRemoteDataSource implements UsuariosRemoteDataSource {
     ultimaSolicitud = solicitud;
     if (error != null) throw error!;
     return respuesta!;
+  }
+
+  @override
+  Future<List<TecnicoModel>> listarTecnicos({
+    String? busqueda,
+    bool? activo,
+  }) async {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<TecnicoModel> editarTecnico(
+    int id,
+    SolicitudEdicionTecnico solicitud,
+  ) async {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<TecnicoModel> cambiarEstadoTecnico(
+    int id, {
+    required bool activo,
+  }) async {
+    throw UnimplementedError();
   }
 }
 
