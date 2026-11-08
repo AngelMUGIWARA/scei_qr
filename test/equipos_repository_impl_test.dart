@@ -53,6 +53,10 @@ class FakeRemoteDataSource implements EquiposRemoteDataSource {
   @override
   Future<Uint8List> obtenerImagenQr(int id) async =>
       throw UnimplementedError();
+
+  @override
+  Future<EquipoModel> resolverQr(String qrToken) async =>
+      throw UnimplementedError();
 }
 
 void main() {

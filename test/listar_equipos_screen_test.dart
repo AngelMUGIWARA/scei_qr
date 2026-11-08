@@ -95,6 +95,10 @@ class FakeEquiposRepository implements EquiposRepository {
 
   @override
   Future<Uint8List> obtenerImagenQr(int id) async => _pngDetalle;
+
+  @override
+  Future<Equipo> resolverQr(String qrToken) async =>
+      throw UnimplementedError();
 }
 
 /// PNG 1x1 válido para Image.memory en el detalle (HU-AD-06).

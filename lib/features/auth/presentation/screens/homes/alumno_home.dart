@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../../dominio/sesion.dart';
+import '../../../../escaneo/presentation/screens/escanear_qr_screen.dart';
 import '../../providers/auth_provider.dart';
 import '../../rol_ui.dart';
 import 'boton_cerrar_sesion.dart';
@@ -9,7 +10,7 @@ import 'boton_cerrar_sesion.dart';
 /// Pantalla principal del **Alumno** (placeholder de la Iteración 1).
 ///
 /// Muestra la sesión activa y deja visibles las funciones que llegarán en
-/// las HU-AL-02 a HU-AL-07.
+/// las HU-AL-03 a HU-AL-07 (HU-AL-02 ya está implementada).
 class AlumnoHome extends StatelessWidget {
   const AlumnoHome({super.key});
 
@@ -40,13 +41,20 @@ class AlumnoHome extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           const Text(
-            'Próximamente (Iteración 1 y 2):',
+            'Próximamente (Iteración 2):',
             style: TextStyle(fontWeight: FontWeight.bold),
           ),
-          const ListTile(
-            leading: Icon(Icons.qr_code_scanner),
-            title: Text('Escanear código QR'),
-            subtitle: Text('HU-AL-02'),
+          // HU-AL-02: escaneo del QR del equipo.
+          ListTile(
+            key: const Key('alumno_escanear_qr'),
+            leading: const Icon(Icons.qr_code_scanner),
+            title: const Text('Escanear código QR'),
+            subtitle: const Text('Identifica el equipo con su código'),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => const EscanearQrScreen(),
+              ),
+            ),
           ),
           const ListTile(
             leading: Icon(Icons.computer),

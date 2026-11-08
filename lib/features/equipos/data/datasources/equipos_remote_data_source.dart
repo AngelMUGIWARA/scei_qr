@@ -28,4 +28,8 @@ abstract class EquiposRemoteDataSource {
 
   /// HU-AD-06: bytes del PNG del QR (`GET /equipos/{id}/qr`).
   Future<Uint8List> obtenerImagenQr(int id);
+
+  /// HU-AL-02: resuelve un `qrToken` escaneado (`GET /equipos/qr/{token}`).
+  /// 404 cuando el token no existe o el equipo está dado de baja.
+  Future<EquipoModel> resolverQr(String qrToken);
 }
