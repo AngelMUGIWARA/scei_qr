@@ -7,10 +7,13 @@ import 'package:scei_qr/core/errors/app_exception.dart';
 import 'package:scei_qr/dominio/alta_equipo.dart';
 import 'package:scei_qr/dominio/edicion_equipo.dart';
 import 'package:scei_qr/dominio/equipo.dart';
+import 'package:scei_qr/dominio/uso.dart';
 import 'package:scei_qr/features/equipos/domain/repositories/equipos_repository.dart';
 import 'package:scei_qr/features/equipos/domain/usecases/validar_qr_usecase.dart';
 import 'package:scei_qr/features/escaneo/domain/permiso_camara.dart';
 import 'package:scei_qr/features/escaneo/presentation/screens/escanear_qr_screen.dart';
+import 'package:scei_qr/features/usos/domain/repositories/usos_repository.dart';
+import 'package:scei_qr/features/usos/domain/usecases/iniciar_uso_usecase.dart';
 
 class _FakeEquiposRepository implements EquiposRepository {
   _FakeEquiposRepository({this.equipo, this.error});
@@ -61,6 +64,23 @@ class _FakeEquiposRepository implements EquiposRepository {
 
   @override
   Future<Uint8List> obtenerImagenQr(int id) async => throw UnimplementedError();
+}
+
+class _FakeUsosRepository implements UsosRepository {
+  final List<String> tokens = [];
+
+  @override
+  Future<Uso> iniciarUso(String qrToken) async {
+    tokens.add(qrToken);
+    return Uso(
+      id: 1,
+      alumnoId: 1,
+      equipoId: 7,
+      inicio: DateTime.utc(2026, 11, 8, 15, 30),
+      estado: EstadoUso.activo,
+      equipo: equipo,
+    );
+  }
 }
 
 class _FakePermisoCamara implements PermisoCamara {
@@ -122,11 +142,13 @@ Future<void> _pantalla(
   required _FakeEquiposRepository repo,
   required _FakePermisoCamara permiso,
   required _CamaraFake camara,
+  IniciarUsoUseCase? iniciarUsoUseCase,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
       home: EscanearQrScreen(
         validarQrUseCase: ValidarQrUseCase(repo),
+        iniciarUsoUseCase: iniciarUsoUseCase,
         permisoCamara: permiso,
         camaraBuilder: camara.construir,
       ),
@@ -310,6 +332,36 @@ void main() {
         find.byKey(const Key('escaneo_equipo_encontrado')),
         findsOneWidget,
       );
+    });
+
+    testWidgets('"Confirmar uso" abre la pantalla de confirmación (HU-AL-03)',
+        (tester) async {
+      final repo = _FakeEquiposRepository(equipo: equipo);
+      final usosRepo = _FakeUsosRepository();
+      final permiso = _FakePermisoCamara(concedido: true);
+      final camara = _CamaraFake();
+
+      await _pantalla(
+        tester,
+        repo: repo,
+        permiso: permiso,
+        camara: camara,
+        iniciarUsoUseCase: IniciarUsoUseCase(usosRepo),
+      );
+
+      camara.onDetectado!('token-valido');
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('escaneo_confirmar_uso')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('confirmar_uso_confirmando')),
+        findsOneWidget,
+      );
+      expect(find.text('Confirmar uso'), findsWidgets);
+      expect(usosRepo.tokens, isEmpty);
     });
   });
 }

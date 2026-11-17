@@ -51,15 +51,17 @@ class AlumnoHome extends StatelessWidget {
             title: const Text('Escanear código QR'),
             subtitle: const Text('Identifica el equipo con su código'),
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (_) => const EscanearQrScreen(),
-              ),
+              MaterialPageRoute<void>(builder: (_) => const EscanearQrScreen()),
             ),
           ),
-          const ListTile(
-            leading: Icon(Icons.computer),
-            title: Text('Registrar uso de un equipo'),
-            subtitle: Text('HU-AL-03'),
+          ListTile(
+            key: const Key('alumno_registrar_uso'),
+            leading: const Icon(Icons.computer),
+            title: const Text('Registrar uso de un equipo'),
+            subtitle: const Text('Escanea el QR y confirma el registro'),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const EscanearQrScreen()),
+            ),
           ),
           const ListTile(
             leading: Icon(Icons.history),

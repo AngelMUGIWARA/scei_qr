@@ -37,12 +37,14 @@ class EscaneoProvider extends ChangeNotifier {
 
   EscaneoStatus _status = EscaneoStatus.solicitandoPermiso;
   Equipo? _equipo;
+  String? _qrToken;
   String? _errorQr;
   bool _procesando = false;
   bool _disposed = false;
 
   EscaneoStatus get status => _status;
   Equipo? get equipo => _equipo;
+  String? get qrToken => _qrToken;
   String? get errorQr => _errorQr;
   bool get procesando => _procesando;
 
@@ -51,6 +53,7 @@ class EscaneoProvider extends ChangeNotifier {
     _status = EscaneoStatus.solicitandoPermiso;
     _errorQr = null;
     _equipo = null;
+    _qrToken = null;
     _notificar();
 
     final concedido = await permisoCamara.estaConcedido();
@@ -79,6 +82,7 @@ class EscaneoProvider extends ChangeNotifier {
     _status = EscaneoStatus.escaneando;
     _errorQr = null;
     _equipo = null;
+    _qrToken = null;
     _notificar();
   }
 
@@ -98,6 +102,7 @@ class EscaneoProvider extends ChangeNotifier {
 
     try {
       _equipo = await validarQrUseCase(token);
+      _qrToken = token;
       _status = EscaneoStatus.equipoEncontrado;
     } on NotFoundException catch (error) {
       // 404: QR no pertenece al sistema o equipo dado de baja. El mensaje
