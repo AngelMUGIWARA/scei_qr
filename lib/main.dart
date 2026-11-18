@@ -20,6 +20,9 @@ import 'features/auth/presentation/screens/splash_screen.dart';
 import 'features/equipos/data/datasources/http_equipos_data_source.dart';
 import 'features/equipos/data/repositories/equipos_repository_impl.dart';
 import 'features/equipos/domain/repositories/equipos_repository.dart';
+import 'features/usos/data/datasources/http_usos_data_source.dart';
+import 'features/usos/data/repositories/usos_repository_impl.dart';
+import 'features/usos/domain/repositories/usos_repository.dart';
 import 'features/usuarios/data/datasources/http_usuarios_data_source.dart';
 import 'features/usuarios/data/repositories/usuarios_repository_impl.dart';
 import 'features/usuarios/domain/repositories/usuarios_repository.dart';
@@ -66,12 +69,22 @@ void main() {
     ),
   );
 
+  // HU-AL-03: registro del uso de un equipo.
+  final usosRepository = UsosRepositoryImpl(
+    HttpUsosDataSource(
+      baseUrl: AppConfig.apiBaseUrl,
+      tokenProvider: storage.readAccessToken,
+      client: http.Client(),
+    ),
+  );
+
   runApp(
     SceiQrApp(
       authRepository: authRepository,
       usuariosRepository: usuariosRepository,
       equiposRepository: equiposRepository,
       alumnosRepository: alumnosRepository,
+      usosRepository: usosRepository,
     ),
   );
 }
@@ -83,12 +96,14 @@ class SceiQrApp extends StatelessWidget {
     required this.usuariosRepository,
     required this.equiposRepository,
     required this.alumnosRepository,
+    required this.usosRepository,
   });
 
   final AuthRepository authRepository;
   final UsuariosRepository usuariosRepository;
   final EquiposRepository equiposRepository;
   final AlumnosRepository alumnosRepository;
+  final UsosRepository usosRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -98,6 +113,7 @@ class SceiQrApp extends StatelessWidget {
         Provider<UsuariosRepository>.value(value: usuariosRepository),
         Provider<EquiposRepository>.value(value: equiposRepository),
         Provider<AlumnosRepository>.value(value: alumnosRepository),
+        Provider<UsosRepository>.value(value: usosRepository),
         ChangeNotifierProvider<AuthProvider>(
           create: (_) => AuthProvider(
             loginUseCase: LoginUseCase(authRepository),

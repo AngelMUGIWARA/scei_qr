@@ -5,6 +5,8 @@ import 'package:provider/provider.dart';
 import '../../../../dominio/equipo.dart';
 import '../../../equipos/domain/repositories/equipos_repository.dart';
 import '../../../equipos/domain/usecases/validar_qr_usecase.dart';
+import '../../../usos/domain/usecases/iniciar_uso_usecase.dart';
+import '../../../usos/presentation/screens/confirmar_uso_screen.dart';
 import '../../data/permiso_camara_handler.dart';
 import '../../domain/permiso_camara.dart';
 import '../providers/escaneo_provider.dart';
@@ -25,11 +27,13 @@ class EscanearQrScreen extends StatelessWidget {
   const EscanearQrScreen({
     super.key,
     this.validarQrUseCase,
+    this.iniciarUsoUseCase,
     this.permisoCamara,
     this.camaraBuilder,
   });
 
   final ValidarQrUseCase? validarQrUseCase;
+  final IniciarUsoUseCase? iniciarUsoUseCase;
   final PermisoCamara? permisoCamara;
 
   /// Reemplaza la cámara real (tests / preview).
@@ -43,20 +47,23 @@ class EscanearQrScreen extends StatelessWidget {
             ? context.read<EquiposRepository>()
             : null;
         return EscaneoProvider(
-          validarQrUseCase:
-              validarQrUseCase ?? ValidarQrUseCase(repository!),
+          validarQrUseCase: validarQrUseCase ?? ValidarQrUseCase(repository!),
           permisoCamara: permisoCamara ?? const PermisoCamaraHandler(),
         )..iniciar();
       },
-      child: _EscanearQrBody(camaraBuilder: camaraBuilder),
+      child: _EscanearQrBody(
+        camaraBuilder: camaraBuilder,
+        iniciarUsoUseCase: iniciarUsoUseCase,
+      ),
     );
   }
 }
 
 class _EscanearQrBody extends StatelessWidget {
-  const _EscanearQrBody({this.camaraBuilder});
+  const _EscanearQrBody({this.camaraBuilder, this.iniciarUsoUseCase});
 
   final CamaraBuilder? camaraBuilder;
+  final IniciarUsoUseCase? iniciarUsoUseCase;
 
   @override
   Widget build(BuildContext context) {
@@ -122,6 +129,17 @@ class _EscanearQrBody extends StatelessWidget {
           key: const Key('escaneo_equipo_encontrado'),
           equipo: provider.equipo!,
           onEscanearOtro: provider.reintentar,
+          onConfirmar: () {
+            Navigator.of(context).push(
+              MaterialPageRoute<void>(
+                builder: (_) => ConfirmarUsoScreen(
+                  equipo: provider.equipo!,
+                  qrToken: provider.qrToken!,
+                  iniciarUsoUseCase: iniciarUsoUseCase,
+                ),
+              ),
+            );
+          },
         );
 
       case EscaneoStatus.errorQr:
@@ -259,10 +277,12 @@ class _EquipoEncontrado extends StatelessWidget {
     super.key,
     required this.equipo,
     required this.onEscanearOtro,
+    required this.onConfirmar,
   });
 
   final Equipo equipo;
   final VoidCallback onEscanearOtro;
+  final VoidCallback onConfirmar;
 
   @override
   Widget build(BuildContext context) {
@@ -325,6 +345,13 @@ class _EquipoEncontrado extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
+            FilledButton.icon(
+              key: const Key('escaneo_confirmar_uso'),
+              onPressed: onConfirmar,
+              icon: const Icon(Icons.check),
+              label: const Text('Confirmar uso'),
+            ),
+            const SizedBox(height: 8),
             FilledButton.tonalIcon(
               key: const Key('escaneo_escanear_otro'),
               onPressed: onEscanearOtro,

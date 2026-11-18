@@ -12,8 +12,10 @@ import 'package:scei_qr/dominio/edicion_equipo.dart';
 import 'package:scei_qr/dominio/edicion_tecnico.dart';
 import 'package:scei_qr/dominio/equipo.dart';
 import 'package:scei_qr/dominio/tecnico.dart';
+import 'package:scei_qr/dominio/uso.dart';
 import 'package:scei_qr/features/alumnos/domain/repositories/alumnos_repository.dart';
 import 'package:scei_qr/features/equipos/domain/repositories/equipos_repository.dart';
+import 'package:scei_qr/features/usos/domain/repositories/usos_repository.dart';
 import 'package:scei_qr/features/usuarios/domain/repositories/usuarios_repository.dart';
 import 'package:scei_qr/main.dart';
 
@@ -57,12 +59,10 @@ class _FakeEquiposRepository implements EquiposRepository {
   Future<Equipo> regenerarQr(int id) async => throw UnimplementedError();
 
   @override
-  Future<Uint8List> obtenerImagenQr(int id) async =>
-      throw UnimplementedError();
+  Future<Uint8List> obtenerImagenQr(int id) async => throw UnimplementedError();
 
   @override
-  Future<Equipo> resolverQr(String qrToken) async =>
-      throw UnimplementedError();
+  Future<Equipo> resolverQr(String qrToken) async => throw UnimplementedError();
 }
 
 class _FakeUsuariosRepository implements UsuariosRepository {
@@ -88,6 +88,11 @@ class _FakeUsuariosRepository implements UsuariosRepository {
   @override
   Future<Tecnico> cambiarEstadoTecnico(int id, {required bool activo}) =>
       throw UnimplementedError();
+}
+
+class _FakeUsosRepository implements UsosRepository {
+  @override
+  Future<Uso> iniciarUso(String qrToken) async => throw UnimplementedError();
 }
 
 class _FakeAlumnosRepository implements AlumnosRepository {
@@ -125,6 +130,7 @@ void main() {
         usuariosRepository: _FakeUsuariosRepository(),
         equiposRepository: _FakeEquiposRepository(),
         alumnosRepository: _FakeAlumnosRepository(),
+        usosRepository: _FakeUsosRepository(),
       ),
     );
 
