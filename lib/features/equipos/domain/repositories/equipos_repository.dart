@@ -10,6 +10,7 @@ abstract class EquiposRepository {
   Future<List<Equipo>> listarEquipos({
     String? q,
     String? ubicacion,
+    String? laboratorio,
     bool? activo,
   });
 
@@ -29,4 +30,15 @@ abstract class EquiposRepository {
   /// asignado. Lanza [NotFoundException] si el token no existe o si el
   /// equipo está dado de baja.
   Future<Equipo> resolverQr(String qrToken);
+
+  /// HU-AD-07: PDF de la etiqueta individual del equipo.
+  Future<Uint8List> descargarEtiquetaQrPdf(int id) =>
+      throw UnimplementedError();
+
+  /// HU-AD-07: PDF con las etiquetas de un lote de equipos.
+  Future<Uint8List> descargarEtiquetasLote({
+    String? laboratorio,
+    String? ubicacion,
+    bool? activo,
+  }) => throw UnimplementedError();
 }

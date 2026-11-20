@@ -26,6 +26,7 @@ class FakeEquiposRepository implements EquiposRepository {
   Future<List<Equipo>> listarEquipos({
     String? q,
     String? ubicacion,
+    String? laboratorio,
     bool? activo,
   }) async {
     listados++;
@@ -97,8 +98,18 @@ class FakeEquiposRepository implements EquiposRepository {
   Future<Uint8List> obtenerImagenQr(int id) async => _pngDetalle;
 
   @override
-  Future<Equipo> resolverQr(String qrToken) async =>
+  Future<Uint8List> descargarEtiquetaQrPdf(int id) async =>
       throw UnimplementedError();
+
+  @override
+  Future<Uint8List> descargarEtiquetasLote({
+    String? laboratorio,
+    String? ubicacion,
+    bool? activo,
+  }) async => throw UnimplementedError();
+
+  @override
+  Future<Equipo> resolverQr(String qrToken) async => throw UnimplementedError();
 }
 
 /// PNG 1x1 válido para Image.memory en el detalle (HU-AD-06).
@@ -246,7 +257,10 @@ void main() {
 
       expect(find.text('Detalle del equipo'), findsOneWidget);
       expect(find.byKey(const Key('detalle_equipo_qr_imagen')), findsOneWidget);
-      expect(find.byKey(const Key('detalle_equipo_regenerar_qr')), findsOneWidget);
+      expect(
+        find.byKey(const Key('detalle_equipo_regenerar_qr')),
+        findsOneWidget,
+      );
     });
   });
 }

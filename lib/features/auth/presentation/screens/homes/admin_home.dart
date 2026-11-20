@@ -5,6 +5,7 @@ import '../../../../../dominio/permiso.dart';
 import '../../../../../dominio/sesion.dart';
 import '../../../../../presentacion/acceso/menu_por_rol.dart';
 import '../../../../alumnos/presentation/screens/gestion_alumnos_screen.dart';
+import '../../../../equipos/presentation/screens/gestionar_codigos_qr_screen.dart';
 import '../../../../equipos/presentation/screens/listar_equipos_screen.dart';
 import '../../../../equipos/presentation/screens/registrar_equipo_screen.dart';
 import '../../../../usuarios/presentation/screens/administrar_tecnicos_screen.dart';
@@ -71,7 +72,11 @@ class AdminHome extends StatelessWidget {
         titulo: 'Gestionar códigos QR',
         permiso: Permiso.gestionarQr,
         icono: Icons.qr_code,
-        alSeleccionar: () => _proximamente(context, 'Gestionar códigos QR'),
+        alSeleccionar: () => Navigator.of(context).push(
+          MaterialPageRoute<void>(
+            builder: (_) => const GestionarCodigosQrScreen(),
+          ),
+        ),
       ),
       OpcionMenu(
         titulo: 'Consultar historial de uso',

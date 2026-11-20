@@ -50,7 +50,7 @@ void main() {
       });
     });
 
-    test('no envía laboratorio, activo ni timestamps', () {
+    test('no envía laboratorio (se conserva), activo ni timestamps', () {
       final payload = toUpdateEquipoPayload(
         const SolicitudEdicionEquipo(
           codigo: 'LAB-PC-001',

@@ -6,10 +6,16 @@ class ListarEquiposUseCase {
 
   final EquiposRepository _repository;
 
-  Future<List<Equipo>> call({String? q, String? ubicacion, bool? activo}) {
+  Future<List<Equipo>> call({
+    String? q,
+    String? ubicacion,
+    String? laboratorio,
+    bool? activo,
+  }) {
     return _repository.listarEquipos(
       q: q,
       ubicacion: ubicacion,
+      laboratorio: laboratorio,
       activo: activo,
     );
   }

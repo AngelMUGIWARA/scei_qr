@@ -16,6 +16,17 @@ class FakeEquiposRepository implements EquiposRepository {
   String? ultimoToken;
 
   @override
+  Future<Uint8List> descargarEtiquetaQrPdf(int id) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<Uint8List> descargarEtiquetasLote({
+    String? laboratorio,
+    String? ubicacion,
+    bool? activo,
+  }) async => throw UnimplementedError();
+
+  @override
   Future<Equipo> resolverQr(String qrToken) async {
     llamadas++;
     ultimoToken = qrToken;
@@ -40,6 +51,7 @@ class FakeEquiposRepository implements EquiposRepository {
   Future<List<Equipo>> listarEquipos({
     String? q,
     String? ubicacion,
+    String? laboratorio,
     bool? activo,
   }) async => throw UnimplementedError();
 
@@ -60,26 +72,29 @@ class FakeEquiposRepository implements EquiposRepository {
   Future<Equipo> regenerarQr(int id) async => throw UnimplementedError();
 
   @override
-  Future<Uint8List> obtenerImagenQr(int id) async =>
-      throw UnimplementedError();
+  Future<Uint8List> obtenerImagenQr(int id) async => throw UnimplementedError();
 }
 
 void main() {
   group('ValidarQrUseCase', () {
-    test('delega en el repositorio y devuelve el equipo cuando el token es válido', () async {
-      final repo = FakeEquiposRepository();
-      final useCase = ValidarQrUseCase(repo);
+    test(
+      'delega en el repositorio y devuelve el equipo cuando el token es válido',
+      () async {
+        final repo = FakeEquiposRepository();
+        final useCase = ValidarQrUseCase(repo);
 
-      final equipo = await useCase('qr-token');
+        final equipo = await useCase('qr-token');
 
-      expect(equipo.identificador, 'LAB-PC-001');
-      expect(repo.llamadas, 1);
-      expect(repo.ultimoToken, 'qr-token');
-    });
+        expect(equipo.identificador, 'LAB-PC-001');
+        expect(repo.llamadas, 1);
+        expect(repo.ultimoToken, 'qr-token');
+      },
+    );
 
     test('propaga NotFoundException cuando el repositorio lanza 404', () async {
       final repo = FakeEquiposRepository(
-        alResolver: (_) async => throw const NotFoundException('QR no encontrado'),
+        alResolver: (_) async =>
+            throw const NotFoundException('QR no encontrado'),
       );
       final useCase = ValidarQrUseCase(repo);
 
@@ -103,10 +118,7 @@ void main() {
       );
       final useCase = ValidarQrUseCase(repo);
 
-      await expectLater(
-        useCase('qr-token'),
-        throwsA(isA<AuthException>()),
-      );
+      await expectLater(useCase('qr-token'), throwsA(isA<AuthException>()));
     });
   });
 }

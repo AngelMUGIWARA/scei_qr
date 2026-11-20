@@ -27,6 +27,17 @@ class _FakeEquiposRepository implements EquiposRepository {
   Completer<Equipo>? espera;
 
   @override
+  Future<Uint8List> descargarEtiquetaQrPdf(int id) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<Uint8List> descargarEtiquetasLote({
+    String? laboratorio,
+    String? ubicacion,
+    bool? activo,
+  }) async => throw UnimplementedError();
+
+  @override
   Future<Equipo> resolverQr(String qrToken) async {
     tokens.add(qrToken);
     final pendiente = espera;
@@ -43,6 +54,7 @@ class _FakeEquiposRepository implements EquiposRepository {
   Future<List<Equipo>> listarEquipos({
     String? q,
     String? ubicacion,
+    String? laboratorio,
     bool? activo,
   }) async => throw UnimplementedError();
 
@@ -84,10 +96,7 @@ class _FakeUsosRepository implements UsosRepository {
 }
 
 class _FakePermisoCamara implements PermisoCamara {
-  _FakePermisoCamara({
-    this.concedido = false,
-    this.concedeEnReintento = false,
-  });
+  _FakePermisoCamara({this.concedido = false, this.concedeEnReintento = false});
 
   bool concedido;
 
@@ -159,8 +168,9 @@ Future<void> _pantalla(
 
 void main() {
   group('EscanearQrScreen — HU-AL-02 (cámara y permisos)', () {
-    testWidgets('permiso concedido → muestra la cámara y la instrucción',
-        (tester) async {
+    testWidgets('permiso concedido → muestra la cámara y la instrucción', (
+      tester,
+    ) async {
       final repo = _FakeEquiposRepository(equipo: equipo);
       final permiso = _FakePermisoCamara(concedido: true);
       final camara = _CamaraFake();
@@ -169,14 +179,10 @@ void main() {
 
       expect(find.byKey(const Key('camara_fake')), findsOneWidget);
       expect(find.byKey(const Key('escaneo_hint')), findsOneWidget);
-      expect(
-        find.text('Apunta al código QR del equipo'),
-        findsOneWidget,
-      );
+      expect(find.text('Apunta al código QR del equipo'), findsOneWidget);
     });
 
-    testWidgets(
-        'permiso denegado → explica cómo habilitarlo y ofrece '
+    testWidgets('permiso denegado → explica cómo habilitarlo y ofrece '
         '"Abrir ajustes" + "Reintentar"', (tester) async {
       final repo = _FakeEquiposRepository(equipo: equipo);
       final permiso = _FakePermisoCamara(); // niega todo
@@ -187,7 +193,10 @@ void main() {
       expect(find.byKey(const Key('escaneo_permiso_denegado')), findsOneWidget);
       expect(find.text('Se necesita el permiso de cámara'), findsOneWidget);
       expect(find.byKey(const Key('escaneo_abrir_ajustes')), findsOneWidget);
-      expect(find.byKey(const Key('escaneo_reintentar_permiso')), findsOneWidget);
+      expect(
+        find.byKey(const Key('escaneo_reintentar_permiso')),
+        findsOneWidget,
+      );
       // CA: con el permiso denegado NO se usa la cámara.
       expect(find.byKey(const Key('camara_fake')), findsNothing);
 
@@ -201,8 +210,9 @@ void main() {
       expect(find.byKey(const Key('escaneo_permiso_denegado')), findsOneWidget);
     });
 
-    testWidgets('"Reintentar" tras habilitar el permiso → vuelve a la cámara',
-        (tester) async {
+    testWidgets('"Reintentar" tras habilitar el permiso → vuelve a la cámara', (
+      tester,
+    ) async {
       final repo = _FakeEquiposRepository(equipo: equipo);
       // El primer "solicitar" se niega; el siguiente (tras Reintentar) pasa.
       final permiso = _FakePermisoCamara(concedeEnReintento: true);
@@ -221,8 +231,9 @@ void main() {
   });
 
   group('EscanearQrScreen — HU-AL-02 (flujo de validación)', () {
-    testWidgets('QR válido → valida y muestra el equipo identificado',
-        (tester) async {
+    testWidgets('QR válido → valida y muestra el equipo identificado', (
+      tester,
+    ) async {
       final repo = _FakeEquiposRepository(equipo: equipo);
       final permiso = _FakePermisoCamara(concedido: true);
       final camara = _CamaraFake();
@@ -234,55 +245,52 @@ void main() {
       await tester.pump(); // → validando (puede verse el spinner)
       await tester.pump(); // → equipo encontrado
 
-      expect(find.byKey(const Key('escaneo_equipo_encontrado')), findsOneWidget);
+      expect(
+        find.byKey(const Key('escaneo_equipo_encontrado')),
+        findsOneWidget,
+      );
       expect(
         find.byKey(const Key('escaneo_equipo_identificador')),
         findsOneWidget,
       );
       expect(find.text('LT-101'), findsOneWidget);
-      expect(
-        find.byKey(const Key('escaneo_equipo_ubicacion')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('escaneo_equipo_ubicacion')), findsOneWidget);
       expect(find.text('Ubicación: Lab de redes'), findsOneWidget);
       expect(repo.tokens, ['token-valido']);
     });
 
-    testWidgets('QR inválido (404) → mensaje de error con opción de reintentar',
-        (tester) async {
-      final repo = _FakeEquiposRepository(
-        error: const NotFoundException('QR no válido o equipo inactivo'),
-      );
-      final permiso = _FakePermisoCamara(concedido: true);
-      final camara = _CamaraFake();
+    testWidgets(
+      'QR inválido (404) → mensaje de error con opción de reintentar',
+      (tester) async {
+        final repo = _FakeEquiposRepository(
+          error: const NotFoundException('QR no válido o equipo inactivo'),
+        );
+        final permiso = _FakePermisoCamara(concedido: true);
+        final camara = _CamaraFake();
 
-      await _pantalla(tester, repo: repo, permiso: permiso, camara: camara);
+        await _pantalla(tester, repo: repo, permiso: permiso, camara: camara);
 
-      camara.onDetectado!('qr-desconocido');
-      await tester.pump();
-      await tester.pump();
+        camara.onDetectado!('qr-desconocido');
+        await tester.pump();
+        await tester.pump();
 
-      expect(find.byKey(const Key('escaneo_error_qr')), findsOneWidget);
-      expect(
-        find.byKey(const Key('escaneo_error_mensaje')),
-        findsOneWidget,
-      );
-      expect(
-        find.text('QR no válido o equipo inactivo'),
-        findsOneWidget,
-      );
-      expect(find.byKey(const Key('escaneo_reintentar_qr')), findsOneWidget);
+        expect(find.byKey(const Key('escaneo_error_qr')), findsOneWidget);
+        expect(find.byKey(const Key('escaneo_error_mensaje')), findsOneWidget);
+        expect(find.text('QR no válido o equipo inactivo'), findsOneWidget);
+        expect(find.byKey(const Key('escaneo_reintentar_qr')), findsOneWidget);
 
-      // Reintentar → vuelve a la cámara.
-      await tester.tap(find.byKey(const Key('escaneo_reintentar_qr')));
-      await tester.pump();
+        // Reintentar → vuelve a la cámara.
+        await tester.tap(find.byKey(const Key('escaneo_reintentar_qr')));
+        await tester.pump();
 
-      expect(find.byKey(const Key('camara_fake')), findsOneWidget);
-      expect(find.byKey(const Key('escaneo_error_qr')), findsNothing);
-    });
+        expect(find.byKey(const Key('camara_fake')), findsOneWidget);
+        expect(find.byKey(const Key('escaneo_error_qr')), findsNothing);
+      },
+    );
 
-    testWidgets('"Escanear otro código" → vuelve a la cámara tras el éxito',
-        (tester) async {
+    testWidgets('"Escanear otro código" → vuelve a la cámara tras el éxito', (
+      tester,
+    ) async {
       final repo = _FakeEquiposRepository(equipo: equipo);
       final permiso = _FakePermisoCamara(concedido: true);
       final camara = _CamaraFake();
@@ -292,20 +300,21 @@ void main() {
       camara.onDetectado!('token-valido');
       await tester.pump();
       await tester.pump();
-      expect(find.byKey(const Key('escaneo_equipo_encontrado')), findsOneWidget);
+      expect(
+        find.byKey(const Key('escaneo_equipo_encontrado')),
+        findsOneWidget,
+      );
 
       await tester.tap(find.byKey(const Key('escaneo_escanear_otro')));
       await tester.pump();
 
       expect(find.byKey(const Key('camara_fake')), findsOneWidget);
-      expect(
-        find.byKey(const Key('escaneo_equipo_encontrado')),
-        findsNothing,
-      );
+      expect(find.byKey(const Key('escaneo_equipo_encontrado')), findsNothing);
     });
 
-    testWidgets('estado "validando" muestra el indicador de progreso',
-        (tester) async {
+    testWidgets('estado "validando" muestra el indicador de progreso', (
+      tester,
+    ) async {
       final repo = _FakeEquiposRepository(equipo: equipo);
       final pendiente = Completer<Equipo>();
       repo.espera = pendiente;
@@ -334,8 +343,9 @@ void main() {
       );
     });
 
-    testWidgets('"Confirmar uso" abre la pantalla de confirmación (HU-AL-03)',
-        (tester) async {
+    testWidgets('"Confirmar uso" abre la pantalla de confirmación (HU-AL-03)', (
+      tester,
+    ) async {
       final repo = _FakeEquiposRepository(equipo: equipo);
       final usosRepo = _FakeUsosRepository();
       final permiso = _FakePermisoCamara(concedido: true);

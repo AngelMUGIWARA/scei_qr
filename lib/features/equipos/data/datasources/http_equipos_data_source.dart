@@ -21,6 +21,7 @@ typedef TokenProvider = Future<String?> Function();
 /// Mapeo aprobado:
 ///   identificador → `codigo`
 ///   descripción   → `descripcion`
+///   laboratorio   → `laboratorio` (HU-AD-07: etiquetas por lote)
 ///   ubicación dentro del laboratorio → `ubicacion` (sin concatenar)
 Map<String, dynamic> toCreateEquipoPayload(SolicitudAltaEquipo solicitud) {
   return {
@@ -32,10 +33,8 @@ Map<String, dynamic> toCreateEquipoPayload(SolicitudAltaEquipo solicitud) {
     'descripcion': solicitud.descripcionNormalizada.isEmpty
         ? null
         : solicitud.descripcionNormalizada,
+    'laboratorio': solicitud.laboratorioNormalizado,
     'ubicacion': solicitud.ubicacionNormalizada,
-    // TODO-PENDIENTE: `laboratorio` (HU-AD-04) no tiene campo en el schema y
-    // `extra="forbid"` lo rechazaría → NO se envía. Pendiente de decisión.
-    //
     // `activo` NO se envía: el estado inicial "Activo" lo asigna el servidor.
   };
 }
@@ -89,6 +88,7 @@ class HttpEquiposDataSource implements EquiposRemoteDataSource {
   Future<List<EquipoModel>> listarEquipos({
     String? q,
     String? ubicacion,
+    String? laboratorio,
     bool? activo,
   }) async {
     final params = <String, String>{};
@@ -96,6 +96,8 @@ class HttpEquiposDataSource implements EquiposRemoteDataSource {
     if (busqueda.isNotEmpty) params['q'] = busqueda;
     final ubicacionFiltro = ubicacion?.trim() ?? '';
     if (ubicacionFiltro.isNotEmpty) params['ubicacion'] = ubicacionFiltro;
+    final laboratorioFiltro = laboratorio?.trim() ?? '';
+    if (laboratorioFiltro.isNotEmpty) params['laboratorio'] = laboratorioFiltro;
     if (activo != null) params['activo'] = activo.toString();
 
     final base = Uri.parse('$_normalizedBaseUrl/equipos');
@@ -179,6 +181,50 @@ class HttpEquiposDataSource implements EquiposRemoteDataSource {
     );
     final response = await _solicitar('GET', uri);
     return _mapEquipoResponse(response);
+  }
+
+  /// HU-AD-07: `GET /equipos/{id}/qr?format=pdf` (ADMIN).
+  @override
+  Future<Uint8List> descargarEtiquetaQrPdf(int id) {
+    final uri = Uri.parse('$_normalizedBaseUrl/equipos/$id/qr?format=pdf');
+    return _descargarPdf(uri);
+  }
+
+  /// HU-AD-07: `GET /equipos/etiquetas` (ADMIN). El lote se filtra por
+  /// laboratorio y/o ubicación; por defecto solo equipos activos.
+  @override
+  Future<Uint8List> descargarEtiquetasLote({
+    String? laboratorio,
+    String? ubicacion,
+    bool? activo,
+  }) {
+    final params = <String, String>{};
+    final laboratorioFiltro = laboratorio?.trim() ?? '';
+    if (laboratorioFiltro.isNotEmpty) params['laboratorio'] = laboratorioFiltro;
+    final ubicacionFiltro = ubicacion?.trim() ?? '';
+    if (ubicacionFiltro.isNotEmpty) params['ubicacion'] = ubicacionFiltro;
+    if (activo != null) params['activo'] = activo.toString();
+
+    final base = Uri.parse('$_normalizedBaseUrl/equipos/etiquetas');
+    final uri = params.isEmpty ? base : base.replace(queryParameters: params);
+    return _descargarPdf(uri);
+  }
+
+  Future<Uint8List> _descargarPdf(Uri uri) async {
+    final response = await _solicitar('GET', uri);
+    if (response.statusCode != 200) {
+      _throwHttpError(response);
+    }
+
+    final bytes = response.bodyBytes;
+    if (bytes.length < 4 ||
+        bytes[0] != 0x25 ||
+        bytes[1] != 0x50 ||
+        bytes[2] != 0x44 ||
+        bytes[3] != 0x46) {
+      throw const ServerException();
+    }
+    return bytes;
   }
 
   Future<http.Response> _solicitar(

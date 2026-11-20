@@ -10,6 +10,7 @@ abstract class EquiposRemoteDataSource {
   Future<List<EquipoModel>> listarEquipos({
     String? q,
     String? ubicacion,
+    String? laboratorio,
     bool? activo,
   });
 
@@ -32,4 +33,17 @@ abstract class EquiposRemoteDataSource {
   /// HU-AL-02: resuelve un `qrToken` escaneado (`GET /equipos/qr/{token}`).
   /// 404 cuando el token no existe o el equipo está dado de baja.
   Future<EquipoModel> resolverQr(String qrToken);
+
+  /// HU-AD-07: PDF de la etiqueta individual
+  /// (`GET /equipos/{id}/qr?format=pdf`).
+  Future<Uint8List> descargarEtiquetaQrPdf(int id) =>
+      throw UnimplementedError();
+
+  /// HU-AD-07: PDF con las etiquetas de un lote
+  /// (`GET /equipos/etiquetas`).
+  Future<Uint8List> descargarEtiquetasLote({
+    String? laboratorio,
+    String? ubicacion,
+    bool? activo,
+  }) => throw UnimplementedError();
 }

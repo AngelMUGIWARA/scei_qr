@@ -23,6 +23,7 @@ class FakeEquiposRepository implements EquiposRepository {
   Future<List<Equipo>> listarEquipos({
     String? q,
     String? ubicacion,
+    String? laboratorio,
     bool? activo,
   }) async {
     listados++;
@@ -63,12 +64,21 @@ class FakeEquiposRepository implements EquiposRepository {
   Future<Equipo> regenerarQr(int id) async => throw UnimplementedError();
 
   @override
-  Future<Uint8List> obtenerImagenQr(int id) async =>
+  Future<Uint8List> obtenerImagenQr(int id) async => throw UnimplementedError();
+
+  @override
+  Future<Uint8List> descargarEtiquetaQrPdf(int id) async =>
       throw UnimplementedError();
 
   @override
-  Future<Equipo> resolverQr(String qrToken) async =>
-      throw UnimplementedError();
+  Future<Uint8List> descargarEtiquetasLote({
+    String? laboratorio,
+    String? ubicacion,
+    bool? activo,
+  }) async => throw UnimplementedError();
+
+  @override
+  Future<Equipo> resolverQr(String qrToken) async => throw UnimplementedError();
 }
 
 const equipoActivo = Equipo(

@@ -5,8 +5,7 @@
 // terminología del HU: identificador (= codigo) y ubicación dentro del
 // laboratorio (= ubicacion).
 //
-// TODO-PENDIENTE: `laboratorio` no existe en el contrato actual
-// (CreateEquipoRequest, extra="forbid") y por eso no se modela aquí.
+// HU-AD-07: `laboratorio` permite generar etiquetas por lote.
 class Equipo {
   const Equipo({
     required this.id,
@@ -17,6 +16,7 @@ class Equipo {
     this.descripcion,
     this.fechaAlta,
     this.qrToken,
+    this.laboratorio,
   });
 
   final int id;
@@ -50,6 +50,9 @@ class Equipo {
   /// lo incluyó.
   final String? qrToken;
 
+  /// Laboratorio al que pertenece el equipo (HU-AD-07: lote de etiquetas).
+  final String? laboratorio;
+
   /// Nombre visible para la UI, con compatibilidad para registros donde el
   /// backend no devolvió un nombre distinto al código.
   String get nombreVisible {
@@ -68,6 +71,7 @@ class Equipo {
     bool? activo,
     DateTime? fechaAlta,
     String? qrToken,
+    String? laboratorio,
   }) {
     return Equipo(
       id: id ?? this.id,
@@ -78,6 +82,7 @@ class Equipo {
       activo: activo ?? this.activo,
       fechaAlta: fechaAlta ?? this.fechaAlta,
       qrToken: qrToken ?? this.qrToken,
+      laboratorio: laboratorio ?? this.laboratorio,
     );
   }
 }

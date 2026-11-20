@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../core/printing/impresion_service.dart';
 import '../../../../dominio/equipo.dart';
 import '../../domain/repositories/equipos_repository.dart';
+import '../../domain/usecases/descargar_etiqueta_qr_usecase.dart';
 import '../../domain/usecases/obtener_equipo_usecase.dart';
 import '../../domain/usecases/obtener_imagen_qr_usecase.dart';
 import '../../domain/usecases/regenerar_qr_usecase.dart';
@@ -18,6 +20,8 @@ class DetalleEquipoScreen extends StatelessWidget {
     this.obtenerEquipoUseCase,
     this.obtenerImagenQrUseCase,
     this.regenerarQrUseCase,
+    this.descargarEtiquetaQrUseCase,
+    this.impresionService,
   });
 
   final int equipoId;
@@ -25,6 +29,8 @@ class DetalleEquipoScreen extends StatelessWidget {
   final ObtenerEquipoUseCase? obtenerEquipoUseCase;
   final ObtenerImagenQrUseCase? obtenerImagenQrUseCase;
   final RegenerarQrUseCase? regenerarQrUseCase;
+  final DescargarEtiquetaQrUseCase? descargarEtiquetaQrUseCase;
+  final ImpresionService? impresionService;
 
   @override
   Widget build(BuildContext context) {
@@ -32,8 +38,9 @@ class DetalleEquipoScreen extends StatelessWidget {
       create: (context) {
         final repository =
             obtenerEquipoUseCase == null ||
-            obtenerImagenQrUseCase == null ||
-            regenerarQrUseCase == null
+                obtenerImagenQrUseCase == null ||
+                regenerarQrUseCase == null ||
+                descargarEtiquetaQrUseCase == null
             ? context.read<EquiposRepository>()
             : null;
         return DetalleEquipoProvider(
@@ -45,6 +52,11 @@ class DetalleEquipoScreen extends StatelessWidget {
               obtenerImagenQrUseCase ?? ObtenerImagenQrUseCase(repository!),
           regenerarQrUseCase:
               regenerarQrUseCase ?? RegenerarQrUseCase(repository!),
+          descargarEtiquetaQrUseCase:
+              descargarEtiquetaQrUseCase ??
+              DescargarEtiquetaQrUseCase(repository!),
+          impresionService:
+              impresionService ?? const PrintingImpresionService(),
         )..cargar();
       },
       child: const _DetalleEquipoBody(),
@@ -204,6 +216,30 @@ class _DetalleEquipoVista extends StatelessWidget {
     provider.limpiarMensajes();
   }
 
+  Future<void> _procesarEtiqueta(
+    BuildContext context,
+    DetalleEquipoProvider provider, {
+    required bool imprimir,
+  }) async {
+    final ok = await provider.procesarEtiqueta(imprimir: imprimir);
+    if (!context.mounted) return;
+    final mensaje = ok ? provider.mensajeEtiqueta : provider.errorEtiqueta;
+    if (mensaje == null) return;
+
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          key: const Key('detalle_equipo_etiqueta_snackbar'),
+          content: Text(mensaje),
+          backgroundColor: ok
+              ? null
+              : Theme.of(context).colorScheme.errorContainer,
+        ),
+      );
+    provider.limpiarMensajes();
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -243,7 +279,9 @@ class _DetalleEquipoVista extends StatelessWidget {
                               children: [
                                 Text(
                                   equipo.identificador,
-                                  key: const Key('detalle_equipo_identificador'),
+                                  key: const Key(
+                                    'detalle_equipo_identificador',
+                                  ),
                                   style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     fontSize: 18,
@@ -312,6 +350,46 @@ class _DetalleEquipoVista extends StatelessWidget {
                   ),
                 ),
               ),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      key: const Key('detalle_equipo_descargar_etiqueta'),
+                      onPressed: provider.procesandoEtiqueta
+                          ? null
+                          : () => _procesarEtiqueta(
+                              context,
+                              provider,
+                              imprimir: false,
+                            ),
+                      icon: const Icon(Icons.download_outlined),
+                      label: const Text('Descargar PDF'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: FilledButton.tonalIcon(
+                      key: const Key('detalle_equipo_imprimir_etiqueta'),
+                      onPressed: provider.procesandoEtiqueta
+                          ? null
+                          : () => _procesarEtiqueta(
+                              context,
+                              provider,
+                              imprimir: true,
+                            ),
+                      icon: const Icon(Icons.print_outlined),
+                      label: const Text('Imprimir'),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'La etiqueta PDF incluye el QR y el identificador legible.',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
               const SizedBox(height: 24),
               FilledButton.icon(
                 key: const Key('detalle_equipo_regenerar_qr'),
@@ -326,9 +404,7 @@ class _DetalleEquipoVista extends StatelessWidget {
                       )
                     : const Icon(Icons.refresh),
                 label: Text(
-                  provider.regenerando
-                      ? 'Regenerando…'
-                      : 'Regenerar código QR',
+                  provider.regenerando ? 'Regenerando…' : 'Regenerar código QR',
                 ),
               ),
             ],
@@ -344,7 +420,9 @@ class _DetalleEquipoVista extends StatelessWidget {
         height: 200,
         width: 200,
         child: Center(
-          child: CircularProgressIndicator(key: Key('detalle_equipo_qr_cargando')),
+          child: CircularProgressIndicator(
+            key: Key('detalle_equipo_qr_cargando'),
+          ),
         ),
       );
     }
@@ -400,7 +478,11 @@ class _DetalleEquipoVista extends StatelessWidget {
 }
 
 class _Dato extends StatelessWidget {
-  const _Dato({required this.icono, required this.etiqueta, required this.valor});
+  const _Dato({
+    required this.icono,
+    required this.etiqueta,
+    required this.valor,
+  });
 
   final IconData icono;
   final String etiqueta;
@@ -419,9 +501,8 @@ class _Dato extends StatelessWidget {
             children: [
               Text(
                 etiqueta,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: Theme.of(context).colorScheme.outline,
-                ),
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: Theme.of(context).colorScheme.outline),
               ),
               Text(valor),
             ],
