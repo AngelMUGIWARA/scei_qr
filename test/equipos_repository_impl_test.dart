@@ -28,6 +28,7 @@ class FakeRemoteDataSource implements EquiposRemoteDataSource {
   Future<List<EquipoModel>> listarEquipos({
     String? q,
     String? ubicacion,
+    String? laboratorio,
     bool? activo,
   }) async => const [];
 
@@ -51,8 +52,18 @@ class FakeRemoteDataSource implements EquiposRemoteDataSource {
   Future<EquipoModel> regenerarQr(int id) async => throw UnimplementedError();
 
   @override
-  Future<Uint8List> obtenerImagenQr(int id) async =>
+  Future<Uint8List> obtenerImagenQr(int id) async => throw UnimplementedError();
+
+  @override
+  Future<Uint8List> descargarEtiquetaQrPdf(int id) async =>
       throw UnimplementedError();
+
+  @override
+  Future<Uint8List> descargarEtiquetasLote({
+    String? laboratorio,
+    String? ubicacion,
+    bool? activo,
+  }) async => throw UnimplementedError();
 
   @override
   Future<EquipoModel> resolverQr(String qrToken) async =>

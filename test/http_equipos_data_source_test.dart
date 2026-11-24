@@ -40,22 +40,26 @@ void main() {
   }
 
   group('toCreateEquipoPayload (HU-AD-04)', () {
-    test('mapea identificador→codigo, descripción y ubicación sin', () {
-      expect(toCreateEquipoPayload(solicitud), {
-        'codigo': 'LAB-PC-001',
-        // TODO-TEMP: `nombre` no existe en la HU; provisorio = identificador.
-        'nombre': 'LAB-PC-001',
-        'descripcion': 'Dell OptiPlex 3080',
-        'ubicacion': 'Fila A, Mesa 3',
-      });
-    });
+    test(
+      'mapea identificador→codigo, descripción, laboratorio y ubicación',
+      () {
+        expect(toCreateEquipoPayload(solicitud), {
+          'codigo': 'LAB-PC-001',
+          // TODO-TEMP: `nombre` no existe en la HU; provisorio = identificador.
+          'nombre': 'LAB-PC-001',
+          'descripcion': 'Dell OptiPlex 3080',
+          'laboratorio': 'Laboratorio de Cómputo 1',
+          'ubicacion': 'Fila A, Mesa 3',
+        });
+      },
+    );
 
     test(
-      'NO envía laboratorio (extra="forbid") ni activo (lo asigna el servidor)',
+      'envía laboratorio (HU-AD-07) y NO activo (lo asigna el servidor)',
       () {
         final payload = toCreateEquipoPayload(solicitud);
 
-        expect(payload.containsKey('laboratorio'), isFalse);
+        expect(payload['laboratorio'], 'Laboratorio de Cómputo 1');
         expect(payload.containsKey('activo'), isFalse);
       },
     );
@@ -85,6 +89,7 @@ void main() {
       expect(payload['codigo'], 'LAB-PC-001');
       expect(payload['ubicacion'], 'Fila A');
       expect(payload['descripcion'], 'Dell');
+      expect(payload['laboratorio'], 'Laboratorio');
     });
   });
 
@@ -101,6 +106,7 @@ void main() {
             'codigo': 'LAB-PC-001',
             'nombre': 'LAB-PC-001',
             'descripcion': 'Dell OptiPlex 3080',
+            'laboratorio': 'Laboratorio de Cómputo 1',
             'ubicacion': 'Fila A, Mesa 3',
           });
           return http.Response(jsonEncode(cuerpoEquipo()), 201);

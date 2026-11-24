@@ -21,11 +21,13 @@ class EquiposRepositoryImpl implements EquiposRepository {
   Future<List<Equipo>> listarEquipos({
     String? q,
     String? ubicacion,
+    String? laboratorio,
     bool? activo,
   }) async {
     final models = await remote.listarEquipos(
       q: q,
       ubicacion: ubicacion,
+      laboratorio: laboratorio,
       activo: activo,
     );
     return models.map((model) => model.toEntity()).toList(growable: false);
@@ -66,4 +68,19 @@ class EquiposRepositoryImpl implements EquiposRepository {
     final model = await remote.resolverQr(qrToken);
     return model.toEntity();
   }
+
+  @override
+  Future<Uint8List> descargarEtiquetaQrPdf(int id) =>
+      remote.descargarEtiquetaQrPdf(id);
+
+  @override
+  Future<Uint8List> descargarEtiquetasLote({
+    String? laboratorio,
+    String? ubicacion,
+    bool? activo,
+  }) => remote.descargarEtiquetasLote(
+    laboratorio: laboratorio,
+    ubicacion: ubicacion,
+    activo: activo,
+  );
 }

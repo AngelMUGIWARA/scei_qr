@@ -3,10 +3,12 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:scei_qr/core/printing/impresion_service.dart';
 import 'package:scei_qr/dominio/alta_equipo.dart';
 import 'package:scei_qr/dominio/edicion_equipo.dart';
 import 'package:scei_qr/dominio/equipo.dart';
 import 'package:scei_qr/features/equipos/domain/repositories/equipos_repository.dart';
+import 'package:scei_qr/features/equipos/domain/usecases/descargar_etiqueta_qr_usecase.dart';
 import 'package:scei_qr/features/equipos/domain/usecases/obtener_equipo_usecase.dart';
 import 'package:scei_qr/features/equipos/domain/usecases/obtener_imagen_qr_usecase.dart';
 import 'package:scei_qr/features/equipos/domain/usecases/regenerar_qr_usecase.dart';
@@ -20,6 +22,7 @@ class FakeEquiposRepository implements EquiposRepository {
   Object? errorRegenerar;
   int imagenesQr = 0;
   int regeneraciones = 0;
+  int etiquetasPdf = 0;
 
   @override
   Future<Equipo> obtenerEquipoPorId(int id) async {
@@ -35,8 +38,20 @@ class FakeEquiposRepository implements EquiposRepository {
   }
 
   @override
-  Future<Equipo> resolverQr(String qrToken) async =>
-      throw UnimplementedError();
+  Future<Uint8List> descargarEtiquetaQrPdf(int id) async {
+    etiquetasPdf++;
+    return Uint8List.fromList([0x25, 0x50, 0x44, 0x46]);
+  }
+
+  @override
+  Future<Uint8List> descargarEtiquetasLote({
+    String? laboratorio,
+    String? ubicacion,
+    bool? activo,
+  }) async => throw UnimplementedError();
+
+  @override
+  Future<Equipo> resolverQr(String qrToken) async => throw UnimplementedError();
 
   @override
   Future<Equipo> regenerarQr(int id) async {
@@ -51,6 +66,7 @@ class FakeEquiposRepository implements EquiposRepository {
   Future<List<Equipo>> listarEquipos({
     String? q,
     String? ubicacion,
+    String? laboratorio,
     bool? activo,
   }) async => throw UnimplementedError();
 
@@ -75,6 +91,24 @@ final Uint8List _png = base64.decode(
   'YPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==',
 );
 
+class _FakeImpresionService implements ImpresionService {
+  int impresiones = 0;
+  int descargas = 0;
+  String? ultimoNombre;
+
+  @override
+  Future<void> imprimir(Uint8List pdf, {required String nombre}) async {
+    impresiones++;
+    ultimoNombre = nombre;
+  }
+
+  @override
+  Future<void> descargar(Uint8List pdf, {required String nombre}) async {
+    descargas++;
+    ultimoNombre = nombre;
+  }
+}
+
 const equipo = Equipo(
   id: 12,
   identificador: 'PC-001',
@@ -89,6 +123,7 @@ void main() {
   Future<FakeEquiposRepository> abrirPantalla(
     WidgetTester tester, {
     FakeEquiposRepository? repo,
+    _FakeImpresionService? impresion,
   }) async {
     final repository = repo ?? FakeEquiposRepository(equipo: equipo);
     await tester.pumpWidget(
@@ -108,6 +143,10 @@ void main() {
                         repository,
                       ),
                       regenerarQrUseCase: RegenerarQrUseCase(repository),
+                      descargarEtiquetaQrUseCase: DescargarEtiquetaQrUseCase(
+                        repository,
+                      ),
+                      impresionService: impresion,
                     ),
                   ),
                 ),
@@ -129,7 +168,10 @@ void main() {
       await abrirPantalla(tester);
 
       expect(find.text('Detalle del equipo'), findsOneWidget);
-      expect(find.byKey(const Key('detalle_equipo_identificador')), findsOneWidget);
+      expect(
+        find.byKey(const Key('detalle_equipo_identificador')),
+        findsOneWidget,
+      );
       expect(find.text('PC-001'), findsOneWidget);
       expect(find.text('Fila A'), findsOneWidget);
       expect(find.text('Dell OptiPlex'), findsOneWidget);
@@ -186,7 +228,10 @@ void main() {
 
       expect(repo.regeneraciones, 1);
       // CA: se informa al administrador que el QR anterior dejó de ser válido.
-      expect(find.byKey(const Key('regenerar_qr_exito_dialog')), findsOneWidget);
+      expect(
+        find.byKey(const Key('regenerar_qr_exito_dialog')),
+        findsOneWidget,
+      );
       expect(find.text('QR regenerado'), findsOneWidget);
       expect(
         find.text(
@@ -229,7 +274,10 @@ void main() {
         find.byKey(const Key('regenerar_qr_error_snackbar')),
         findsOneWidget,
       );
-      expect(find.text('No se pudo regenerar el QR. Inténtalo de nuevo.'), findsOneWidget);
+      expect(
+        find.text('No se pudo regenerar el QR. Inténtalo de nuevo.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('error al cargar el QR ofrece reintentar sin bloquear', (
@@ -244,7 +292,10 @@ void main() {
       );
 
       expect(find.byKey(const Key('detalle_equipo_qr_error')), findsOneWidget);
-      expect(find.byKey(const Key('detalle_equipo_qr_reintentar')), findsOneWidget);
+      expect(
+        find.byKey(const Key('detalle_equipo_qr_reintentar')),
+        findsOneWidget,
+      );
       // Los datos del equipo siguen visibles.
       expect(find.text('PC-001'), findsOneWidget);
 
@@ -254,6 +305,48 @@ void main() {
 
       expect(find.byKey(const Key('detalle_equipo_qr_error')), findsNothing);
       expect(find.byKey(const Key('detalle_equipo_qr_imagen')), findsOneWidget);
+    });
+  });
+
+  group('DetalleEquipoScreen — HU-AD-07', () {
+    testWidgets('descarga la etiqueta PDF del equipo', (tester) async {
+      final impresion = _FakeImpresionService();
+      final repo = await abrirPantalla(tester, impresion: impresion);
+
+      final boton = find.byKey(const Key('detalle_equipo_descargar_etiqueta'));
+      await tester.ensureVisible(boton);
+      await tester.pumpAndSettle();
+      await tester.tap(boton);
+      await tester.pumpAndSettle();
+
+      expect(repo.etiquetasPdf, 1);
+      expect(impresion.descargas, 1);
+      expect(impresion.impresiones, 0);
+      expect(impresion.ultimoNombre, 'etiqueta-pc-001.pdf');
+      expect(
+        find.byKey(const Key('detalle_equipo_etiqueta_snackbar')),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Etiqueta lista para guardar o compartir.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('envía la etiqueta a imprimir', (tester) async {
+      final impresion = _FakeImpresionService();
+      final repo = await abrirPantalla(tester, impresion: impresion);
+
+      final boton = find.byKey(const Key('detalle_equipo_imprimir_etiqueta'));
+      await tester.ensureVisible(boton);
+      await tester.pumpAndSettle();
+      await tester.tap(boton);
+      await tester.pumpAndSettle();
+
+      expect(repo.etiquetasPdf, 1);
+      expect(impresion.impresiones, 1);
+      expect(impresion.descargas, 0);
+      expect(find.text('Etiqueta enviada a imprimir.'), findsOneWidget);
     });
   });
 }

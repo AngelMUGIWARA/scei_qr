@@ -35,8 +35,18 @@ class FakeEquiposRepository implements EquiposRepository {
   }
 
   @override
-  Future<Equipo> resolverQr(String qrToken) async =>
+  Future<Uint8List> descargarEtiquetaQrPdf(int id) async =>
       throw UnimplementedError();
+
+  @override
+  Future<Uint8List> descargarEtiquetasLote({
+    String? laboratorio,
+    String? ubicacion,
+    bool? activo,
+  }) async => throw UnimplementedError();
+
+  @override
+  Future<Equipo> resolverQr(String qrToken) async => throw UnimplementedError();
 
   @override
   Future<Equipo> regenerarQr(int id) async {
@@ -52,6 +62,7 @@ class FakeEquiposRepository implements EquiposRepository {
   Future<List<Equipo>> listarEquipos({
     String? q,
     String? ubicacion,
+    String? laboratorio,
     bool? activo,
   }) async => throw UnimplementedError();
 
@@ -142,23 +153,26 @@ void main() {
       expect(repo.imagenesQr, 2);
     });
 
-    test('regenerar cambia el token y marca el QR anterior como invalidado', () async {
-      final repo = FakeEquiposRepository(equipo: equipo);
-      final provider = construirProvider(repo);
-      addTearDown(provider.dispose);
-      await provider.cargar();
+    test(
+      'regenerar cambia el token y marca el QR anterior como invalidado',
+      () async {
+        final repo = FakeEquiposRepository(equipo: equipo);
+        final provider = construirProvider(repo);
+        addTearDown(provider.dispose);
+        await provider.cargar();
 
-      final ok = await provider.regenerarQr();
+        final ok = await provider.regenerarQr();
 
-      expect(ok, isTrue);
-      expect(repo.regeneraciones, 1);
-      expect(provider.equipo!.qrToken, 'qr-token-2');
-      // CA: se informa que el anterior dejó de ser válido.
-      expect(provider.qrInvalidado, isTrue);
-      // El PNG mostrado corresponde al QR nuevo (se recargó).
-      expect(repo.imagenesQr, 2);
-      expect(provider.regenerando, isFalse);
-    });
+        expect(ok, isTrue);
+        expect(repo.regeneraciones, 1);
+        expect(provider.equipo!.qrToken, 'qr-token-2');
+        // CA: se informa que el anterior dejó de ser válido.
+        expect(provider.qrInvalidado, isTrue);
+        // El PNG mostrado corresponde al QR nuevo (se recargó).
+        expect(repo.imagenesQr, 2);
+        expect(provider.regenerando, isFalse);
+      },
+    );
 
     test('limpiarMensajes resetea el aviso de invalidación', () async {
       final repo = FakeEquiposRepository(equipo: equipo);
@@ -186,7 +200,10 @@ void main() {
 
       expect(ok, isFalse);
       expect(repo.regeneraciones, 1);
-      expect(provider.errorAccion, 'No tienes permisos para realizar esta acción.');
+      expect(
+        provider.errorAccion,
+        'No tienes permisos para realizar esta acción.',
+      );
       expect(provider.qrInvalidado, isFalse);
       expect(provider.equipo!.qrToken, 'qr-token-1');
       expect(provider.regenerando, isFalse);

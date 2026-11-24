@@ -10,6 +10,7 @@ class EquipoModel {
     this.descripcion,
     this.fechaAlta,
     this.qrToken,
+    this.laboratorio,
   });
 
   final int id;
@@ -22,6 +23,9 @@ class EquipoModel {
 
   /// Payload del QR (HU-AD-06). Backend: `qrToken` en `equipment_public`.
   final String? qrToken;
+
+  /// Laboratorio del equipo (HU-AD-07: etiquetas por lote).
+  final String? laboratorio;
 
   /// Alias explícito del contrato: `codigo` en la API.
   String get codigo => identificador;
@@ -37,6 +41,7 @@ class EquipoModel {
 
     final rawNombre = json['nombre'];
     final rawQrToken = json['qrToken'];
+    final rawLaboratorio = json['laboratorio'];
     return EquipoModel(
       id: rawId.toInt(),
       identificador: rawCodigo,
@@ -50,6 +55,9 @@ class EquipoModel {
       qrToken: rawQrToken is String && rawQrToken.isNotEmpty
           ? rawQrToken
           : null,
+      laboratorio: rawLaboratorio is String && rawLaboratorio.trim().isNotEmpty
+          ? rawLaboratorio.trim()
+          : null,
     );
   }
 
@@ -62,6 +70,7 @@ class EquipoModel {
     activo: activo,
     fechaAlta: fechaAlta,
     qrToken: qrToken,
+    laboratorio: laboratorio,
   );
 
   static DateTime? _fecha(Object? value) {

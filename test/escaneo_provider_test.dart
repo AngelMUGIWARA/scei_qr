@@ -19,6 +19,17 @@ class _FakeEquiposRepository implements EquiposRepository {
   final List<String> tokens = [];
 
   @override
+  Future<Uint8List> descargarEtiquetaQrPdf(int id) async =>
+      throw UnimplementedError();
+
+  @override
+  Future<Uint8List> descargarEtiquetasLote({
+    String? laboratorio,
+    String? ubicacion,
+    bool? activo,
+  }) async => throw UnimplementedError();
+
+  @override
   Future<Equipo> resolverQr(String qrToken) async {
     tokens.add(qrToken);
     if (error != null) throw error!;
@@ -33,6 +44,7 @@ class _FakeEquiposRepository implements EquiposRepository {
   Future<List<Equipo>> listarEquipos({
     String? q,
     String? ubicacion,
+    String? laboratorio,
     bool? activo,
   }) async => throw UnimplementedError();
 
@@ -122,31 +134,35 @@ void main() {
       expect(permiso.solicitudes, 0);
     });
 
-    test('permiso no concedido → se solicita y se otorga → escaneando',
-        () async {
-      final repo = _FakeEquiposRepository(equipo: equipo);
-      final permiso = _FakePermisoCamara(puedeSolicitar: true);
-      final provider = _construirProvider(repo: repo, permiso: permiso);
-      addTearDown(provider.dispose);
+    test(
+      'permiso no concedido → se solicita y se otorga → escaneando',
+      () async {
+        final repo = _FakeEquiposRepository(equipo: equipo);
+        final permiso = _FakePermisoCamara(puedeSolicitar: true);
+        final provider = _construirProvider(repo: repo, permiso: permiso);
+        addTearDown(provider.dispose);
 
-      await provider.iniciar();
+        await provider.iniciar();
 
-      expect(provider.status, EscaneoStatus.escaneando);
-      expect(permiso.solicitudes, 1);
-    });
+        expect(provider.status, EscaneoStatus.escaneando);
+        expect(permiso.solicitudes, 1);
+      },
+    );
 
-    test('permiso denegado → permisoDenegado con explicación de ajustes',
-        () async {
-      final repo = _FakeEquiposRepository(equipo: equipo);
-      final permiso = _FakePermisoCamara();
-      final provider = _construirProvider(repo: repo, permiso: permiso);
-      addTearDown(provider.dispose);
+    test(
+      'permiso denegado → permisoDenegado con explicación de ajustes',
+      () async {
+        final repo = _FakeEquiposRepository(equipo: equipo);
+        final permiso = _FakePermisoCamara();
+        final provider = _construirProvider(repo: repo, permiso: permiso);
+        addTearDown(provider.dispose);
 
-      await provider.iniciar();
+        await provider.iniciar();
 
-      expect(provider.status, EscaneoStatus.permisoDenegado);
-      expect(permiso.solicitudes, 1);
-    });
+        expect(provider.status, EscaneoStatus.permisoDenegado);
+        expect(permiso.solicitudes, 1);
+      },
+    );
 
     test('abrirAjustes habilita el permiso y revalida → escaneando', () async {
       final repo = _FakeEquiposRepository(equipo: equipo);
@@ -181,27 +197,29 @@ void main() {
       expect(provider.errorQr, isNull);
     });
 
-    test('QR inexistente (404) → errorQr con mensaje y opción de reintentar',
-        () async {
-      final repo = _FakeEquiposRepository(
-        error: const NotFoundException('QR no válido o equipo inactivo'),
-      );
-      final permiso = _FakePermisoCamara(concedido: true);
-      final provider = _construirProvider(repo: repo, permiso: permiso);
-      addTearDown(provider.dispose);
-      await provider.iniciar();
+    test(
+      'QR inexistente (404) → errorQr con mensaje y opción de reintentar',
+      () async {
+        final repo = _FakeEquiposRepository(
+          error: const NotFoundException('QR no válido o equipo inactivo'),
+        );
+        final permiso = _FakePermisoCamara(concedido: true);
+        final provider = _construirProvider(repo: repo, permiso: permiso);
+        addTearDown(provider.dispose);
+        await provider.iniciar();
 
-      await provider.procesarQr('qr-desconocido');
+        await provider.procesarQr('qr-desconocido');
 
-      expect(provider.status, EscaneoStatus.errorQr);
-      expect(provider.errorQr, 'QR no válido o equipo inactivo');
-      expect(provider.equipo, isNull);
+        expect(provider.status, EscaneoStatus.errorQr);
+        expect(provider.errorQr, 'QR no válido o equipo inactivo');
+        expect(provider.equipo, isNull);
 
-      // CA: permite reintentar → vuelve a la cámara y limpia el error.
-      provider.reintentar();
-      expect(provider.status, EscaneoStatus.escaneando);
-      expect(provider.errorQr, isNull);
-    });
+        // CA: permite reintentar → vuelve a la cámara y limpia el error.
+        provider.reintentar();
+        expect(provider.status, EscaneoStatus.escaneando);
+        expect(provider.errorQr, isNull);
+      },
+    );
 
     test('QR de equipo dado de baja (404 del backend) → errorQr', () async {
       final repo = _FakeEquiposRepository(
@@ -220,22 +238,24 @@ void main() {
       expect(provider.equipo, isNull);
     });
 
-    test('lecturas duplicadas (frames seguidos) → una sola validación',
-        () async {
-      final repo = _FakeEquiposRepository(equipo: equipo);
-      final permiso = _FakePermisoCamara(concedido: true);
-      final provider = _construirProvider(repo: repo, permiso: permiso);
-      addTearDown(provider.dispose);
-      await provider.iniciar();
+    test(
+      'lecturas duplicadas (frames seguidos) → una sola validación',
+      () async {
+        final repo = _FakeEquiposRepository(equipo: equipo);
+        final permiso = _FakePermisoCamara(concedido: true);
+        final provider = _construirProvider(repo: repo, permiso: permiso);
+        addTearDown(provider.dispose);
+        await provider.iniciar();
 
-      // Dos frames con el mismo token casi al mismo tiempo.
-      final primero = provider.procesarQr('token-valido');
-      final segundo = provider.procesarQr('token-valido');
-      await Future.wait([primero, segundo]);
+        // Dos frames con el mismo token casi al mismo tiempo.
+        final primero = provider.procesarQr('token-valido');
+        final segundo = provider.procesarQr('token-valido');
+        await Future.wait([primero, segundo]);
 
-      expect(repo.tokens, hasLength(1));
-      expect(provider.status, EscaneoStatus.equipoEncontrado);
-    });
+        expect(repo.tokens, hasLength(1));
+        expect(provider.status, EscaneoStatus.equipoEncontrado);
+      },
+    );
 
     test('QR vacío o en blanco → se ignora y sigue escaneando', () async {
       final repo = _FakeEquiposRepository(equipo: equipo);
@@ -250,21 +270,23 @@ void main() {
       expect(provider.status, EscaneoStatus.escaneando);
     });
 
-    test('error de red → errorQr con mensaje genérico y reintentable',
-        () async {
-      final repo = _FakeEquiposRepository(error: const NetworkException());
-      final permiso = _FakePermisoCamara(concedido: true);
-      final provider = _construirProvider(repo: repo, permiso: permiso);
-      addTearDown(provider.dispose);
-      await provider.iniciar();
+    test(
+      'error de red → errorQr con mensaje genérico y reintentable',
+      () async {
+        final repo = _FakeEquiposRepository(error: const NetworkException());
+        final permiso = _FakePermisoCamara(concedido: true);
+        final provider = _construirProvider(repo: repo, permiso: permiso);
+        addTearDown(provider.dispose);
+        await provider.iniciar();
 
-      await provider.procesarQr('token-valido');
+        await provider.procesarQr('token-valido');
 
-      expect(provider.status, EscaneoStatus.errorQr);
-      expect(provider.errorQr, isNotNull);
+        expect(provider.status, EscaneoStatus.errorQr);
+        expect(provider.errorQr, isNotNull);
 
-      provider.reintentar();
-      expect(provider.status, EscaneoStatus.escaneando);
-    });
+        provider.reintentar();
+        expect(provider.status, EscaneoStatus.escaneando);
+      },
+    );
   });
 }

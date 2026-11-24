@@ -15,12 +15,8 @@ class SolicitudAltaEquipo {
 
   final String identificador;
 
-  /// Laboratorio al que pertenece el equipo.
-  ///
-  /// TODO-PENDIENTE: el contrato `CreateEquipoRequest` no tiene campo para el
-  /// laboratorio (`extra="forbid"` rechaza campos fuera del schema). Se
-  /// recolecta en el formulario porque el HU lo pide, pero aún no se persiste.
-  /// Pendiente de decisión del equipo.
+  /// Laboratorio al que pertenece el equipo. Se persiste en el backend y se
+  /// usa para generar etiquetas por lote (HU-AD-07).
   final String laboratorio;
 
   /// Ubicación dentro del laboratorio.
