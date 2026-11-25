@@ -8,6 +8,13 @@ import 'package:scei_qr/features/usos/domain/usecases/iniciar_uso_usecase.dart';
 import 'package:scei_qr/features/usos/presentation/screens/confirmar_uso_screen.dart';
 
 class _FakeUsosRepository implements UsosRepository {
+  // HU-AL-04: no se usa en estas pruebas.
+  @override
+  Future<Uso?> obtenerUsoActivo() async => null;
+
+  @override
+  Future<Uso> finalizarUso(int usoId) async => throw UnimplementedError();
+
   _FakeUsosRepository({this.uso, this.error});
 
   Uso? uso;

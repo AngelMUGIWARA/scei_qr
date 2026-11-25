@@ -79,6 +79,13 @@ class _FakeEquiposRepository implements EquiposRepository {
 }
 
 class _FakeUsosRepository implements UsosRepository {
+  // HU-AL-04: no se usa en estas pruebas.
+  @override
+  Future<Uso?> obtenerUsoActivo() async => null;
+
+  @override
+  Future<Uso> finalizarUso(int usoId) async => throw UnimplementedError();
+
   final List<String> tokens = [];
 
   @override
