@@ -20,6 +20,7 @@ import 'package:scei_qr/features/usuarios/domain/repositories/usuarios_repositor
 import 'package:scei_qr/main.dart';
 
 import 'fakes_auth.dart';
+import 'fakes_usos.dart';
 
 class _FakeEquiposRepository implements EquiposRepository {
   @override
@@ -104,7 +105,8 @@ class _FakeUsuariosRepository implements UsuariosRepository {
 
 class _FakeUsosRepository implements UsosRepository {
   @override
-  Future<Uso> iniciarUso(String qrToken) async => throw UnimplementedError();
+  Future<Uso> iniciarUso(String qrToken, {String? idempotencyKey}) async =>
+      throw UnimplementedError();
 }
 
 class _FakeAlumnosRepository implements AlumnosRepository {
@@ -143,6 +145,7 @@ void main() {
         equiposRepository: _FakeEquiposRepository(),
         alumnosRepository: _FakeAlumnosRepository(),
         usosRepository: _FakeUsosRepository(),
+        colaUsosPendientes: FakeColaUsosPendientes(),
       ),
     );
 

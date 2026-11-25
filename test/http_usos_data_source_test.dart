@@ -64,6 +64,21 @@ void main() {
       await datasource(client).iniciarUso('  qr-token  ');
     });
 
+    test('envia la clave de idempotencia cuando se proporciona', () async {
+      final client = MockClient((request) async {
+        expect(jsonDecode(request.body), {
+          'qrToken': 'qr-token',
+          'idempotencyKey': 'clave-123',
+        });
+        return http.Response(jsonEncode(cuerpoUso()), 201);
+      });
+
+      await datasource(client).iniciarUso(
+        'qr-token',
+        idempotencyKey: 'clave-123',
+      );
+    });
+
     test('token vacío lanza ValidationException sin llamar a la red', () async {
       var llamadas = 0;
       final client = MockClient((_) async {

@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../dominio/equipo.dart';
+import '../../../usos/domain/repositories/cola_usos_pendientes_repository.dart';
 import '../../../usos/domain/repositories/usos_repository.dart';
-import '../../../usos/domain/usecases/iniciar_uso_usecase.dart';
+import '../../../usos/domain/usecases/registrar_uso_usecase.dart';
 import '../providers/registrar_uso_provider.dart';
 
 class ConfirmarUsoScreen extends StatelessWidget {
@@ -11,22 +12,25 @@ class ConfirmarUsoScreen extends StatelessWidget {
     super.key,
     required this.equipo,
     required this.qrToken,
-    this.iniciarUsoUseCase,
+    this.registrarUsoUseCase,
   });
 
   final Equipo equipo;
   final String qrToken;
-  final IniciarUsoUseCase? iniciarUsoUseCase;
+  final RegistrarUsoUseCase? registrarUsoUseCase;
 
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) {
         final useCase =
-            iniciarUsoUseCase ??
-            IniciarUsoUseCase(context.read<UsosRepository>());
+            registrarUsoUseCase ??
+            RegistrarUsoUseCase(
+              context.read<UsosRepository>(),
+              context.read<ColaUsosPendientesRepository>(),
+            );
         return RegistrarUsoProvider(
-          iniciarUsoUseCase: useCase,
+          registrarUsoUseCase: useCase,
           equipo: equipo,
           qrToken: qrToken,
         );
@@ -78,6 +82,13 @@ class _ConfirmarUsoBody extends StatelessWidget {
           equipo: provider.equipo,
           inicio: provider.uso?.inicio,
           onListo: () => Navigator.of(context).pop(),
+        );
+
+      case RegistroUsoStatus.pendiente:
+        return _Pendiente(
+          key: const Key('confirmar_uso_pendiente'),
+          equipo: provider.equipo,
+          onEntendido: () => Navigator.of(context).pop(),
         );
 
       case RegistroUsoStatus.error:
@@ -187,6 +198,55 @@ class _Registrado extends StatelessWidget {
               onPressed: onListo,
               icon: const Icon(Icons.done),
               label: const Text('Listo'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _Pendiente extends StatelessWidget {
+  const _Pendiente({
+    super.key,
+    required this.equipo,
+    required this.onEntendido,
+  });
+
+  final Equipo equipo;
+  final VoidCallback onEntendido;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.cloud_off, color: colorScheme.tertiary, size: 72),
+            const SizedBox(height: 16),
+            Text(
+              'Uso pendiente de sincronizar',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.headlineSmall,
+            ),
+            const SizedBox(height: 16),
+            _TarjetaEquipo(equipo: equipo),
+            const SizedBox(height: 16),
+            Text(
+              'No hay conexión. Guardamos tu registro en este dispositivo y '
+              'se enviará automáticamente cuando recuperes internet.',
+              key: const Key('confirmar_uso_pendiente_mensaje'),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            FilledButton.icon(
+              key: const Key('confirmar_uso_pendiente_listo'),
+              onPressed: onEntendido,
+              icon: const Icon(Icons.done),
+              label: const Text('Entendido'),
             ),
           ],
         ),

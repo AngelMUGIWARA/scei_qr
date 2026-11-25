@@ -3,18 +3,26 @@ import 'package:flutter/foundation.dart';
 import '../../../../core/errors/app_exception.dart';
 import '../../../../dominio/equipo.dart';
 import '../../../../dominio/uso.dart';
-import '../../domain/usecases/iniciar_uso_usecase.dart';
+import '../../domain/usecases/registrar_uso_usecase.dart';
 
-enum RegistroUsoStatus { confirmando, registrando, registrado, error }
+enum RegistroUsoStatus {
+  confirmando,
+  registrando,
+  registrado,
+
+  /// Sin conexión: el registro quedó guardado localmente para sincronizarse.
+  pendiente,
+  error,
+}
 
 class RegistrarUsoProvider extends ChangeNotifier {
   RegistrarUsoProvider({
-    required this.iniciarUsoUseCase,
+    required this.registrarUsoUseCase,
     required this.equipo,
     required this.qrToken,
   });
 
-  final IniciarUsoUseCase iniciarUsoUseCase;
+  final RegistrarUsoUseCase registrarUsoUseCase;
   final Equipo equipo;
   final String qrToken;
 
@@ -41,8 +49,18 @@ class RegistrarUsoProvider extends ChangeNotifier {
     _notificar();
 
     try {
-      _uso = await iniciarUsoUseCase(qrToken);
-      _status = RegistroUsoStatus.registrado;
+      final resultado = await registrarUsoUseCase(
+        qrToken: qrToken,
+        equipo: equipo,
+      );
+
+      if (resultado.esPendiente) {
+        _uso = null;
+        _status = RegistroUsoStatus.pendiente;
+      } else {
+        _uso = resultado.uso;
+        _status = RegistroUsoStatus.registrado;
+      }
     } on NetworkException catch (error) {
       _error = error.message;
       _reintentable = true;

@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../dominio/equipo.dart';
 import '../../../equipos/domain/repositories/equipos_repository.dart';
 import '../../../equipos/domain/usecases/validar_qr_usecase.dart';
-import '../../../usos/domain/usecases/iniciar_uso_usecase.dart';
+import '../../../usos/domain/usecases/registrar_uso_usecase.dart';
 import '../../../usos/presentation/screens/confirmar_uso_screen.dart';
 import '../../data/permiso_camara_handler.dart';
 import '../../domain/permiso_camara.dart';
@@ -27,13 +27,13 @@ class EscanearQrScreen extends StatelessWidget {
   const EscanearQrScreen({
     super.key,
     this.validarQrUseCase,
-    this.iniciarUsoUseCase,
+    this.registrarUsoUseCase,
     this.permisoCamara,
     this.camaraBuilder,
   });
 
   final ValidarQrUseCase? validarQrUseCase;
-  final IniciarUsoUseCase? iniciarUsoUseCase;
+  final RegistrarUsoUseCase? registrarUsoUseCase;
   final PermisoCamara? permisoCamara;
 
   /// Reemplaza la cámara real (tests / preview).
@@ -53,17 +53,17 @@ class EscanearQrScreen extends StatelessWidget {
       },
       child: _EscanearQrBody(
         camaraBuilder: camaraBuilder,
-        iniciarUsoUseCase: iniciarUsoUseCase,
+        registrarUsoUseCase: registrarUsoUseCase,
       ),
     );
   }
 }
 
 class _EscanearQrBody extends StatelessWidget {
-  const _EscanearQrBody({this.camaraBuilder, this.iniciarUsoUseCase});
+  const _EscanearQrBody({this.camaraBuilder, this.registrarUsoUseCase});
 
   final CamaraBuilder? camaraBuilder;
-  final IniciarUsoUseCase? iniciarUsoUseCase;
+  final RegistrarUsoUseCase? registrarUsoUseCase;
 
   @override
   Widget build(BuildContext context) {
@@ -135,7 +135,7 @@ class _EscanearQrBody extends StatelessWidget {
                 builder: (_) => ConfirmarUsoScreen(
                   equipo: provider.equipo!,
                   qrToken: provider.qrToken!,
-                  iniciarUsoUseCase: iniciarUsoUseCase,
+                  registrarUsoUseCase: registrarUsoUseCase,
                 ),
               ),
             );

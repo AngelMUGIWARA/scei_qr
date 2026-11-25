@@ -4,8 +4,10 @@ import 'package:scei_qr/core/errors/app_exception.dart';
 import 'package:scei_qr/dominio/equipo.dart';
 import 'package:scei_qr/dominio/uso.dart';
 import 'package:scei_qr/features/usos/domain/repositories/usos_repository.dart';
-import 'package:scei_qr/features/usos/domain/usecases/iniciar_uso_usecase.dart';
+import 'package:scei_qr/features/usos/domain/usecases/registrar_uso_usecase.dart';
 import 'package:scei_qr/features/usos/presentation/screens/confirmar_uso_screen.dart';
+
+import 'fakes_usos.dart';
 
 class _FakeUsosRepository implements UsosRepository {
   _FakeUsosRepository({this.uso, this.error});
@@ -15,7 +17,7 @@ class _FakeUsosRepository implements UsosRepository {
   final List<String> tokens = [];
 
   @override
-  Future<Uso> iniciarUso(String qrToken) async {
+  Future<Uso> iniciarUso(String qrToken, {String? idempotencyKey}) async {
     tokens.add(qrToken);
     if (error != null) throw error!;
     return uso!;
@@ -40,16 +42,21 @@ final usoRegistrado = Uso(
   equipo: equipo,
 );
 
-Future<void> _pantalla(WidgetTester tester, _FakeUsosRepository repo) async {
+Future<FakeColaUsosPendientes> _pantalla(
+  WidgetTester tester,
+  _FakeUsosRepository repo,
+) async {
+  final cola = FakeColaUsosPendientes();
   await tester.pumpWidget(
     MaterialApp(
       home: ConfirmarUsoScreen(
         equipo: equipo,
         qrToken: 'qr-token',
-        iniciarUsoUseCase: IniciarUsoUseCase(repo),
+        registrarUsoUseCase: RegistrarUsoUseCase(repo, cola),
       ),
     ),
   );
+  return cola;
 }
 
 void main() {
@@ -90,27 +97,26 @@ void main() {
       expect(repo.tokens, ['qr-token']);
     });
 
-    testWidgets('sin conexión informa y reintenta sin volver a escanear', (
+    testWidgets('sin conexión deja el uso pendiente y lo encola', (
       tester,
     ) async {
       final repo = _FakeUsosRepository(error: const NetworkException());
-      await _pantalla(tester, repo);
+      final cola = await _pantalla(tester, repo);
 
       await tester.tap(find.byKey(const Key('confirmar_uso_confirmar')));
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('confirmar_uso_error')), findsOneWidget);
       expect(
-        find.byKey(const Key('confirmar_uso_error_mensaje')),
+        find.byKey(const Key('confirmar_uso_pendiente')),
         findsOneWidget,
       );
-      expect(find.text(const NetworkException().message), findsOneWidget);
-      expect(find.byKey(const Key('confirmar_uso_reintentar')), findsOneWidget);
-
-      await tester.tap(find.byKey(const Key('confirmar_uso_reintentar')));
-      await tester.pumpAndSettle();
-
-      expect(repo.tokens, ['qr-token', 'qr-token']);
+      expect(find.text('Uso pendiente de sincronizar'), findsOneWidget);
+      expect(
+        find.byKey(const Key('confirmar_uso_pendiente_listo')),
+        findsOneWidget,
+      );
+      expect(cola.items, hasLength(1));
+      expect(cola.items.single.qrToken, 'qr-token');
     });
 
     testWidgets('conflicto 409 muestra el mensaje sin botón de reintentar', (

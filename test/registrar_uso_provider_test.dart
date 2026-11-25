@@ -5,8 +5,10 @@ import 'package:scei_qr/core/errors/app_exception.dart';
 import 'package:scei_qr/dominio/equipo.dart';
 import 'package:scei_qr/dominio/uso.dart';
 import 'package:scei_qr/features/usos/domain/repositories/usos_repository.dart';
-import 'package:scei_qr/features/usos/domain/usecases/iniciar_uso_usecase.dart';
+import 'package:scei_qr/features/usos/domain/usecases/registrar_uso_usecase.dart';
 import 'package:scei_qr/features/usos/presentation/providers/registrar_uso_provider.dart';
+
+import 'fakes_usos.dart';
 
 class _FakeUsosRepository implements UsosRepository {
   _FakeUsosRepository({this.uso, this.error});
@@ -15,10 +17,12 @@ class _FakeUsosRepository implements UsosRepository {
   Object? error;
   Completer<Uso>? espera;
   final List<String> tokens = [];
+  final List<String?> clavesIdempotencia = [];
 
   @override
-  Future<Uso> iniciarUso(String qrToken) async {
+  Future<Uso> iniciarUso(String qrToken, {String? idempotencyKey}) async {
     tokens.add(qrToken);
+    clavesIdempotencia.add(idempotencyKey);
     final pendiente = espera;
     if (pendiente != null) return pendiente.future;
     if (error != null) throw error!;
@@ -44,9 +48,12 @@ final usoRegistrado = Uso(
   equipo: equipo,
 );
 
-RegistrarUsoProvider _provider(_FakeUsosRepository repo) {
+RegistrarUsoProvider _provider(
+  _FakeUsosRepository repo,
+  FakeColaUsosPendientes cola,
+) {
   return RegistrarUsoProvider(
-    iniciarUsoUseCase: IniciarUsoUseCase(repo),
+    registrarUsoUseCase: RegistrarUsoUseCase(repo, cola),
     equipo: equipo,
     qrToken: 'qr-token',
   );
@@ -54,20 +61,23 @@ RegistrarUsoProvider _provider(_FakeUsosRepository repo) {
 
 void main() {
   group('RegistrarUsoProvider — HU-AL-03', () {
-    test(
-      'inicia en estado confirmando (pide confirmación antes de guardar)',
-      () {
-        final provider = _provider(_FakeUsosRepository(uso: usoRegistrado));
-        addTearDown(provider.dispose);
+    test('inicia en estado confirmando (pide confirmación antes de guardar)', () {
+      final cola = FakeColaUsosPendientes();
+      final provider = _provider(
+        _FakeUsosRepository(uso: usoRegistrado),
+        cola,
+      );
+      addTearDown(provider.dispose);
 
-        expect(provider.status, RegistroUsoStatus.confirmando);
-        expect(provider.uso, isNull);
-      },
-    );
+      expect(provider.status, RegistroUsoStatus.confirmando);
+      expect(provider.uso, isNull);
+      expect(cola.items, isEmpty);
+    });
 
-    test('confirmar guarda el uso con el qrToken escaneado', () async {
+    test('confirmar guarda el uso con el qrToken y una clave de idempotencia', () async {
       final repo = _FakeUsosRepository(uso: usoRegistrado);
-      final provider = _provider(repo);
+      final cola = FakeColaUsosPendientes();
+      final provider = _provider(repo, cola);
       addTearDown(provider.dispose);
 
       await provider.confirmar();
@@ -75,6 +85,9 @@ void main() {
       expect(provider.status, RegistroUsoStatus.registrado);
       expect(provider.uso, same(usoRegistrado));
       expect(repo.tokens, ['qr-token']);
+      expect(repo.clavesIdempotencia.single, isNotNull);
+      expect(repo.clavesIdempotencia.single, isNotEmpty);
+      expect(cola.items, isEmpty);
       expect(provider.error, isNull);
     });
 
@@ -82,7 +95,8 @@ void main() {
       final repo = _FakeUsosRepository();
       final pendiente = Completer<Uso>();
       repo.espera = pendiente;
-      final provider = _provider(repo);
+      final cola = FakeColaUsosPendientes();
+      final provider = _provider(repo, cola);
       addTearDown(provider.dispose);
 
       final primero = provider.confirmar();
@@ -98,21 +112,20 @@ void main() {
       expect(provider.status, RegistroUsoStatus.registrado);
     });
 
-    test('sin conexión informa y permite reintentar sin reescanear', () async {
+    test('sin conexión deja el uso en la cola y queda pendiente', () async {
       final repo = _FakeUsosRepository(error: const NetworkException());
-      final provider = _provider(repo);
+      final cola = FakeColaUsosPendientes();
+      final provider = _provider(repo, cola);
       addTearDown(provider.dispose);
 
       await provider.confirmar();
 
-      expect(provider.status, RegistroUsoStatus.error);
-      expect(provider.error, const NetworkException().message);
-      expect(provider.reintentable, isTrue);
-
-      await provider.reintentar();
-
-      expect(provider.status, RegistroUsoStatus.error);
-      expect(repo.tokens, ['qr-token', 'qr-token']);
+      expect(provider.status, RegistroUsoStatus.pendiente);
+      expect(provider.error, isNull);
+      expect(provider.uso, isNull);
+      expect(cola.items, hasLength(1));
+      expect(cola.items.single.qrToken, 'qr-token');
+      expect(cola.items.single.equipoIdentificador, 'LAB-PC-001');
     });
 
     test(
@@ -123,7 +136,8 @@ void main() {
             'El equipo ya está en uso. Finaliza el uso actual.',
           ),
         );
-        final provider = _provider(repo);
+        final cola = FakeColaUsosPendientes();
+        final provider = _provider(repo, cola);
         addTearDown(provider.dispose);
 
         await provider.confirmar();
@@ -134,18 +148,21 @@ void main() {
           'El equipo ya está en uso. Finaliza el uso actual.',
         );
         expect(provider.reintentable, isFalse);
+        expect(cola.items, isEmpty);
       },
     );
 
-    test('error de servidor permite reintentar', () async {
+    test('error de servidor permite reintentar y no encola', () async {
       final repo = _FakeUsosRepository(error: const ServerException());
-      final provider = _provider(repo);
+      final cola = FakeColaUsosPendientes();
+      final provider = _provider(repo, cola);
       addTearDown(provider.dispose);
 
       await provider.confirmar();
 
       expect(provider.status, RegistroUsoStatus.error);
       expect(provider.reintentable, isTrue);
+      expect(cola.items, isEmpty);
     });
   });
 }

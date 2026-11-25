@@ -26,14 +26,22 @@ class HttpUsosDataSource implements UsosRemoteDataSource {
   String get _normalizedBaseUrl => baseUrl.replaceFirst(RegExp(r'/+$'), '');
 
   @override
-  Future<UsoModel> iniciarUso(String qrToken) async {
+  Future<UsoModel> iniciarUso(String qrToken, {String? idempotencyKey}) async {
     final token = qrToken.trim();
     if (token.isEmpty) {
       throw const ValidationException('El código QR escaneado no es válido.');
     }
 
+    final clave = idempotencyKey?.trim();
     final uri = Uri.parse('$_normalizedBaseUrl/usos');
-    final response = await _solicitar('POST', uri, body: {'qrToken': token});
+    final response = await _solicitar(
+      'POST',
+      uri,
+      body: {
+        'qrToken': token,
+        if (clave != null && clave.isNotEmpty) 'idempotencyKey': clave,
+      },
+    );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       _throwHttpError(response);

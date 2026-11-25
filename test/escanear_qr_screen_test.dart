@@ -13,7 +13,9 @@ import 'package:scei_qr/features/equipos/domain/usecases/validar_qr_usecase.dart
 import 'package:scei_qr/features/escaneo/domain/permiso_camara.dart';
 import 'package:scei_qr/features/escaneo/presentation/screens/escanear_qr_screen.dart';
 import 'package:scei_qr/features/usos/domain/repositories/usos_repository.dart';
-import 'package:scei_qr/features/usos/domain/usecases/iniciar_uso_usecase.dart';
+import 'package:scei_qr/features/usos/domain/usecases/registrar_uso_usecase.dart';
+
+import 'fakes_usos.dart';
 
 class _FakeEquiposRepository implements EquiposRepository {
   _FakeEquiposRepository({this.equipo, this.error});
@@ -82,7 +84,7 @@ class _FakeUsosRepository implements UsosRepository {
   final List<String> tokens = [];
 
   @override
-  Future<Uso> iniciarUso(String qrToken) async {
+  Future<Uso> iniciarUso(String qrToken, {String? idempotencyKey}) async {
     tokens.add(qrToken);
     return Uso(
       id: 1,
@@ -150,14 +152,14 @@ Future<void> _pantalla(
   WidgetTester tester, {
   required _FakeEquiposRepository repo,
   required _FakePermisoCamara permiso,
-  required _CamaraFake camara,
-  IniciarUsoUseCase? iniciarUsoUseCase,
+  required   _CamaraFake camara,
+  RegistrarUsoUseCase? registrarUsoUseCase,
 }) async {
   await tester.pumpWidget(
     MaterialApp(
       home: EscanearQrScreen(
         validarQrUseCase: ValidarQrUseCase(repo),
-        iniciarUsoUseCase: iniciarUsoUseCase,
+        registrarUsoUseCase: registrarUsoUseCase,
         permisoCamara: permiso,
         camaraBuilder: camara.construir,
       ),
@@ -356,7 +358,10 @@ void main() {
         repo: repo,
         permiso: permiso,
         camara: camara,
-        iniciarUsoUseCase: IniciarUsoUseCase(usosRepo),
+        registrarUsoUseCase: RegistrarUsoUseCase(
+          usosRepo,
+          FakeColaUsosPendientes(),
+        ),
       );
 
       camara.onDetectado!('token-valido');

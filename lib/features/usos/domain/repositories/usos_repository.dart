@@ -1,5 +1,5 @@
 import '../../../../dominio/uso.dart';
 
 abstract class UsosRepository {
-  Future<Uso> iniciarUso(String qrToken);
+  Future<Uso> iniciarUso(String qrToken, {String? idempotencyKey});
 }

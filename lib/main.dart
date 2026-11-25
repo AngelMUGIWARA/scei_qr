@@ -21,8 +21,13 @@ import 'features/equipos/data/datasources/http_equipos_data_source.dart';
 import 'features/equipos/data/repositories/equipos_repository_impl.dart';
 import 'features/equipos/domain/repositories/equipos_repository.dart';
 import 'features/usos/data/datasources/http_usos_data_source.dart';
+import 'features/usos/data/datasources/local/cola_usos_local_data_source.dart';
+import 'features/usos/data/repositories/cola_usos_pendientes_repository_impl.dart';
 import 'features/usos/data/repositories/usos_repository_impl.dart';
+import 'features/usos/domain/repositories/cola_usos_pendientes_repository.dart';
 import 'features/usos/domain/repositories/usos_repository.dart';
+import 'features/usos/domain/usecases/sincronizar_usos_pendientes_usecase.dart';
+import 'features/usos/presentation/providers/sincronizacion_usos_provider.dart';
 import 'features/usuarios/data/datasources/http_usuarios_data_source.dart';
 import 'features/usuarios/data/repositories/usuarios_repository_impl.dart';
 import 'features/usuarios/domain/repositories/usuarios_repository.dart';
@@ -78,6 +83,11 @@ void main() {
     ),
   );
 
+  // HU-AL-03: cola local para registros sin conexión.
+  final colaUsosPendientes = ColaUsosPendientesRepositoryImpl(
+    SharedPreferencesColaUsosLocalDataSource(),
+  );
+
   runApp(
     SceiQrApp(
       authRepository: authRepository,
@@ -85,6 +95,7 @@ void main() {
       equiposRepository: equiposRepository,
       alumnosRepository: alumnosRepository,
       usosRepository: usosRepository,
+      colaUsosPendientes: colaUsosPendientes,
     ),
   );
 }
@@ -97,6 +108,7 @@ class SceiQrApp extends StatelessWidget {
     required this.equiposRepository,
     required this.alumnosRepository,
     required this.usosRepository,
+    required this.colaUsosPendientes,
   });
 
   final AuthRepository authRepository;
@@ -104,6 +116,7 @@ class SceiQrApp extends StatelessWidget {
   final EquiposRepository equiposRepository;
   final AlumnosRepository alumnosRepository;
   final UsosRepository usosRepository;
+  final ColaUsosPendientesRepository colaUsosPendientes;
 
   @override
   Widget build(BuildContext context) {
@@ -114,6 +127,19 @@ class SceiQrApp extends StatelessWidget {
         Provider<EquiposRepository>.value(value: equiposRepository),
         Provider<AlumnosRepository>.value(value: alumnosRepository),
         Provider<UsosRepository>.value(value: usosRepository),
+        Provider<ColaUsosPendientesRepository>.value(
+          value: colaUsosPendientes,
+        ),
+        ChangeNotifierProvider<SincronizacionUsosProvider>(
+          lazy: false,
+          create: (_) => SincronizacionUsosProvider(
+            sincronizarUseCase: SincronizarUsosPendientesUseCase(
+              usosRepository,
+              colaUsosPendientes,
+            ),
+            cola: colaUsosPendientes,
+          )..iniciar(),
+        ),
         ChangeNotifierProvider<AuthProvider>(
           create: (_) => AuthProvider(
             loginUseCase: LoginUseCase(authRepository),

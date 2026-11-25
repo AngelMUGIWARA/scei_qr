@@ -8,8 +8,11 @@ class UsosRepositoryImpl implements UsosRepository {
   final UsosRemoteDataSource remote;
 
   @override
-  Future<Uso> iniciarUso(String qrToken) async {
-    final model = await remote.iniciarUso(qrToken);
+  Future<Uso> iniciarUso(String qrToken, {String? idempotencyKey}) async {
+    final model = await remote.iniciarUso(
+      qrToken,
+      idempotencyKey: idempotencyKey,
+    );
     return model.toEntity();
   }
 }
