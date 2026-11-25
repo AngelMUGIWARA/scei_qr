@@ -68,6 +68,27 @@ class AlumnoHome extends StatelessWidget {
             title: Text('Consultar mis registros'),
             subtitle: Text('HU-AL-05'),
           ),
+          // HU-AL-06: reporte de incidencia del equipo.
+          ListTile(
+            key: const Key('alumno_reportar_incidencia'),
+            leading: const Icon(Icons.report_problem_outlined),
+            title: const Text('Reportar incidencia'),
+            subtitle: const Text('Reporta una falla en la computadora'),
+            onTap: () {
+              // La pantalla de reporte requiere un equipo ya identificado.
+              // Desde el home se llega primero al escaneo; la pantalla de
+              // reporte se abre desde allí con el equipo resuelto.
+              // Si en el futuro se agrega la ruta desde un registro activo,
+              // se puede navegar directamente pasando el equipo activo.
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const EscanearQrScreen(
+                    modoReporte: true,
+                  ),
+                ),
+              );
+            },
+          ),
         ],
       ),
     );

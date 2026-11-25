@@ -4,7 +4,7 @@ flu# HU-GEN-01: Control de acceso por rol
 | :--- | :--- |
 | **Rol** | Usuario del sistema |
 | **Plataforma** | Móvil |
-| **Prioridad** | Alta |
+| **Prioridad** | Alta | 
 | **Origen** | Propuesta |
 | **Iteración sugerida** | Iteración 1 |
 | **Dependencias** | Ninguna |

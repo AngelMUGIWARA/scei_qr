@@ -20,6 +20,9 @@ import 'features/auth/presentation/screens/splash_screen.dart';
 import 'features/equipos/data/datasources/http_equipos_data_source.dart';
 import 'features/equipos/data/repositories/equipos_repository_impl.dart';
 import 'features/equipos/domain/repositories/equipos_repository.dart';
+import 'features/incidencias/data/datasources/http_incidencias_data_source.dart';
+import 'features/incidencias/data/repositories/incidencias_repository_impl.dart';
+import 'features/incidencias/domain/repositories/incidencias_repository.dart';
 import 'features/usos/data/datasources/http_usos_data_source.dart';
 import 'features/usos/data/repositories/usos_repository_impl.dart';
 import 'features/usos/domain/repositories/usos_repository.dart';
@@ -78,6 +81,15 @@ void main() {
     ),
   );
 
+  // HU-AL-06: reporte de incidencias del alumno.
+  final incidenciasRepository = IncidenciasRepositoryImpl(
+    HttpIncidenciasDataSource(
+      baseUrl: AppConfig.apiBaseUrl,
+      tokenProvider: storage.readAccessToken,
+      client: http.Client(),
+    ),
+  );
+
   runApp(
     SceiQrApp(
       authRepository: authRepository,
@@ -85,6 +97,7 @@ void main() {
       equiposRepository: equiposRepository,
       alumnosRepository: alumnosRepository,
       usosRepository: usosRepository,
+      incidenciasRepository: incidenciasRepository,
     ),
   );
 }
@@ -97,6 +110,7 @@ class SceiQrApp extends StatelessWidget {
     required this.equiposRepository,
     required this.alumnosRepository,
     required this.usosRepository,
+    required this.incidenciasRepository,
   });
 
   final AuthRepository authRepository;
@@ -104,6 +118,7 @@ class SceiQrApp extends StatelessWidget {
   final EquiposRepository equiposRepository;
   final AlumnosRepository alumnosRepository;
   final UsosRepository usosRepository;
+  final IncidenciasRepository incidenciasRepository;
 
   @override
   Widget build(BuildContext context) {
@@ -114,6 +129,7 @@ class SceiQrApp extends StatelessWidget {
         Provider<EquiposRepository>.value(value: equiposRepository),
         Provider<AlumnosRepository>.value(value: alumnosRepository),
         Provider<UsosRepository>.value(value: usosRepository),
+        Provider<IncidenciasRepository>.value(value: incidenciasRepository),
         ChangeNotifierProvider<AuthProvider>(
           create: (_) => AuthProvider(
             loginUseCase: LoginUseCase(authRepository),

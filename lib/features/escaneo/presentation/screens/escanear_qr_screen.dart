@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../dominio/equipo.dart';
 import '../../../equipos/domain/repositories/equipos_repository.dart';
 import '../../../equipos/domain/usecases/validar_qr_usecase.dart';
+import '../../../incidencias/presentation/screens/reportar_incidencia_screen.dart';
 import '../../../usos/domain/usecases/iniciar_uso_usecase.dart';
 import '../../../usos/presentation/screens/confirmar_uso_screen.dart';
 import '../../data/permiso_camara_handler.dart';
@@ -23,6 +24,9 @@ typedef CamaraBuilder = Widget Function(
 /// Muestra la cámara mientras se pide el permiso, valida el QR leído
 /// contra el backend y muestra el equipo identificado (o el error con
 /// opción de reintentar).
+///
+/// [modoReporte]: cuando es `true`, el botón "Confirmar" navega a
+/// [ReportarIncidenciaScreen] en lugar de [ConfirmarUsoScreen] (HU-AL-06).
 class EscanearQrScreen extends StatelessWidget {
   const EscanearQrScreen({
     super.key,
@@ -30,6 +34,7 @@ class EscanearQrScreen extends StatelessWidget {
     this.iniciarUsoUseCase,
     this.permisoCamara,
     this.camaraBuilder,
+    this.modoReporte = false,
   });
 
   final ValidarQrUseCase? validarQrUseCase;
@@ -38,6 +43,10 @@ class EscanearQrScreen extends StatelessWidget {
 
   /// Reemplaza la cámara real (tests / preview).
   final CamaraBuilder? camaraBuilder;
+
+  /// Cuando es `true`, al identificar el equipo navega a
+  /// [ReportarIncidenciaScreen] en lugar de [ConfirmarUsoScreen] (HU-AL-06).
+  final bool modoReporte;
 
   @override
   Widget build(BuildContext context) {
@@ -54,16 +63,25 @@ class EscanearQrScreen extends StatelessWidget {
       child: _EscanearQrBody(
         camaraBuilder: camaraBuilder,
         iniciarUsoUseCase: iniciarUsoUseCase,
+        modoReporte: modoReporte,
       ),
     );
   }
 }
 
 class _EscanearQrBody extends StatelessWidget {
-  const _EscanearQrBody({this.camaraBuilder, this.iniciarUsoUseCase});
+  const _EscanearQrBody({
+    this.camaraBuilder,
+    this.iniciarUsoUseCase,
+    this.modoReporte = false,
+  });
 
   final CamaraBuilder? camaraBuilder;
   final IniciarUsoUseCase? iniciarUsoUseCase;
+
+  /// `true` → al confirmar el equipo se navega a
+  /// [ReportarIncidenciaScreen] en lugar de [ConfirmarUsoScreen] (HU-AL-06).
+  final bool modoReporte;
 
   @override
   Widget build(BuildContext context) {
@@ -128,8 +146,21 @@ class _EscanearQrBody extends StatelessWidget {
         return _EquipoEncontrado(
           key: const Key('escaneo_equipo_encontrado'),
           equipo: provider.equipo!,
+          modoReporte: modoReporte,
           onEscanearOtro: provider.reintentar,
           onConfirmar: () {
+            // HU-AL-06: en modo reporte el equipo ya identificado alimenta
+            // el formulario; no se inicia uso.
+            if (modoReporte) {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => ReportarIncidenciaScreen(
+                    equipo: provider.equipo!,
+                  ),
+                ),
+              );
+              return;
+            }
             Navigator.of(context).push(
               MaterialPageRoute<void>(
                 builder: (_) => ConfirmarUsoScreen(
@@ -278,11 +309,16 @@ class _EquipoEncontrado extends StatelessWidget {
     required this.equipo,
     required this.onEscanearOtro,
     required this.onConfirmar,
+    this.modoReporte = false,
   });
 
   final Equipo equipo;
   final VoidCallback onEscanearOtro;
   final VoidCallback onConfirmar;
+
+  /// `true` → el botón principal reporta incidencia (HU-AL-06) en lugar de
+  /// confirmar el uso del equipo.
+  final bool modoReporte;
 
   @override
   Widget build(BuildContext context) {
@@ -348,8 +384,12 @@ class _EquipoEncontrado extends StatelessWidget {
             FilledButton.icon(
               key: const Key('escaneo_confirmar_uso'),
               onPressed: onConfirmar,
-              icon: const Icon(Icons.check),
-              label: const Text('Confirmar uso'),
+              icon: Icon(
+                modoReporte ? Icons.report_problem : Icons.check,
+              ),
+              label: Text(
+                modoReporte ? 'Reportar incidencia' : 'Confirmar uso',
+              ),
             ),
             const SizedBox(height: 8),
             FilledButton.tonalIcon(
