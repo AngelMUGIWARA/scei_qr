@@ -39,6 +39,55 @@ class HttpUsosDataSource implements UsosRemoteDataSource {
       _throwHttpError(response);
     }
 
+    return _mapUso(response);
+  }
+
+  /// HU-AL-04: lista de usos del alumno autenticado. El uso activo (si
+  /// existe) es el que tiene `estado == "ACTIVO"`.
+  @override
+  Future<List<UsoModel>> misRegistros() async {
+    final uri = Uri.parse('$_normalizedBaseUrl/usos/mis-registros');
+    final response = await _solicitar('GET', uri);
+
+    if (response.statusCode != 200) {
+      _throwHttpError(response);
+    }
+
+    try {
+      final decoded = jsonDecode(response.body);
+      if (decoded is! List) throw const FormatException('Lista inválida');
+      return decoded
+          .map((item) {
+            if (item is! Map<String, dynamic>) {
+              throw const FormatException('Elemento de uso inválido');
+            }
+            return UsoModel.fromJson(item);
+          })
+          .toList(growable: false);
+    } catch (_) {
+      throw const ServerException();
+    }
+  }
+
+  /// HU-AL-04: el servidor asigna `fin` y devuelve el uso "FINALIZADO".
+  @override
+  Future<UsoModel> finalizarUso(int usoId) async {
+    final uri = Uri.parse('$_normalizedBaseUrl/usos/$usoId/finalizar');
+    final response = await _solicitar('PATCH', uri);
+
+    if (response.statusCode != 200) {
+      _throwHttpError(
+        response,
+        mensaje403: 'Solo puedes finalizar tus propios usos.',
+        mensaje404: 'El registro de uso no existe.',
+        mensaje409: 'El uso ya fue finalizado.',
+      );
+    }
+
+    return _mapUso(response);
+  }
+
+  UsoModel _mapUso(http.Response response) {
     try {
       return UsoModel.fromJson(
         jsonDecode(response.body) as Map<String, dynamic>,
@@ -65,6 +114,18 @@ class HttpUsosDataSource implements UsosRemoteDataSource {
 
     try {
       switch (method) {
+        case 'GET':
+          return await _client
+              .get(uri, headers: headers)
+              .timeout(AppConfig.requestTimeout);
+        case 'PATCH':
+          return await _client
+              .patch(
+                uri,
+                headers: headers,
+                body: body == null ? null : jsonEncode(body),
+              )
+              .timeout(AppConfig.requestTimeout);
         case 'POST':
           return await _client
               .post(
@@ -87,7 +148,14 @@ class HttpUsosDataSource implements UsosRemoteDataSource {
     }
   }
 
-  Never _throwHttpError(http.Response response) {
+  /// Los mensajes por defecto corresponden a HU-AL-03 (iniciar uso); cada
+  /// operación puede sustituirlos cuando el código significa otra cosa.
+  Never _throwHttpError(
+    http.Response response, {
+    String? mensaje403,
+    String mensaje404 = 'El equipo no existe o está dado de baja.',
+    String mensaje409 = 'Ya tienes un uso activo o el equipo ya está en uso.',
+  }) {
     final body = _decodeBody(response.body);
 
     switch (response.statusCode) {
@@ -98,16 +166,13 @@ class HttpUsosDataSource implements UsosRemoteDataSource {
       case 401:
         throw const AuthException('Tu sesión expiró. Inicia sesión de nuevo.');
       case 403:
-        throw const ForbiddenException();
+        throw mensaje403 == null
+            ? const ForbiddenException()
+            : ForbiddenException(mensaje403);
       case 404:
-        throw NotFoundException(
-          _mensaje(body) ?? 'El equipo no existe o está dado de baja.',
-        );
+        throw NotFoundException(_mensaje(body) ?? mensaje404);
       case 409:
-        throw ConflictException(
-          _mensaje(body) ??
-              'Ya tienes un uso activo o el equipo ya está en uso.',
-        );
+        throw ConflictException(_mensaje(body) ?? mensaje409);
       case 422:
         throw ValidationException(
           _mensaje(body) ?? 'Revisa los datos e inténtalo de nuevo.',

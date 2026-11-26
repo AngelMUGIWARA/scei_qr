@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:scei_qr/core/errors/app_exception.dart';
 import 'package:scei_qr/dominio/rol.dart';
+import 'package:scei_qr/dominio/uso.dart';
 import 'package:scei_qr/features/auth/domain/repositories/auth_repository.dart';
 import 'package:scei_qr/features/auth/domain/usecases/cerrar_sesion_usecase.dart';
 import 'package:scei_qr/features/auth/domain/usecases/login_usecase.dart';
@@ -11,6 +12,7 @@ import 'package:scei_qr/features/auth/domain/usecases/restore_session_usecase.da
 import 'package:scei_qr/features/auth/presentation/providers/auth_provider.dart';
 import 'package:scei_qr/features/auth/presentation/screens/home_screen.dart';
 import 'package:scei_qr/features/auth/presentation/screens/login_screen.dart';
+import 'package:scei_qr/features/usos/domain/repositories/usos_repository.dart';
 
 import 'fakes_auth.dart';
 
@@ -23,8 +25,12 @@ void main() {
 
   Future<void> pumpLogin(WidgetTester tester, AuthRepository repo) async {
     await tester.pumpWidget(
-      ChangeNotifierProvider<AuthProvider>.value(
-        value: providerDe(repo),
+      MultiProvider(
+        providers: [
+          // HU-AL-04: el home del alumno consulta su uso activo.
+          Provider<UsosRepository>.value(value: _SinUsoActivoRepository()),
+          ChangeNotifierProvider<AuthProvider>.value(value: providerDe(repo)),
+        ],
         child: MaterialApp(
           home: const LoginScreen(),
           routes: {
@@ -223,4 +229,16 @@ void main() {
       });
     }
   });
+}
+
+/// HU-AL-04: el alumno no tiene uso activo en estas pruebas de login.
+class _SinUsoActivoRepository implements UsosRepository {
+  @override
+  Future<Uso> iniciarUso(String qrToken) async => throw UnimplementedError();
+
+  @override
+  Future<Uso?> obtenerUsoActivo() async => null;
+
+  @override
+  Future<Uso> finalizarUso(int usoId) async => throw UnimplementedError();
 }

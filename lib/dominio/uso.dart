@@ -1,3 +1,7 @@
+// CAPA: DOMINIO — Registro de uso de un equipo (HU-AL-03, HU-AL-04).
+//
+// `inicio` y `fin` son las fechas que asigna el servidor (UTC). La duración
+// se calcula siempre con ellas, nunca con la hora del dispositivo.
 import 'equipo.dart';
 
 enum EstadoUso {
@@ -33,4 +37,12 @@ class Uso {
   final Equipo? equipo;
 
   bool get estaActivo => estado == EstadoUso.activo;
+
+  /// HU-AL-04: duración del uso (`fin - inicio`). Nula mientras el uso
+  /// siga activo (el servidor todavía no asignó `fin`).
+  Duration? get duracion {
+    final fecha = fin;
+    if (fecha == null) return null;
+    return fecha.difference(inicio);
+  }
 }
