@@ -28,9 +28,6 @@ enum TipoProblema {
     }
   }
 
-  /// Valor que se envía al backend.
-  String get valorApi => name.toUpperCase();
-
   static TipoProblema desdeApi(String valor) {
     switch (valor.toUpperCase()) {
       case 'HARDWARE':
@@ -47,34 +44,20 @@ enum TipoProblema {
   }
 }
 
-/// Estados posibles de una incidencia (README §3).
+/// Estados de una incidencia que el alumno puede ver (README §3).
+///
+/// Esta iteración solo expone "Pendiente": es el estado con el que se crea
+/// el reporte. Los estados que aplicará soporte (en atención / resuelta)
+/// se incorporarán cuando el equipo los publique en el API.
 enum EstadoIncidencia {
-  pendiente,
-  enAtencion,
-  resuelta;
+  pendiente;
 
-  String get etiqueta {
-    switch (this) {
-      case EstadoIncidencia.pendiente:
-        return 'Pendiente';
-      case EstadoIncidencia.enAtencion:
-        return 'En atención';
-      case EstadoIncidencia.resuelta:
-        return 'Resuelta';
-    }
-  }
+  /// Etiqueta visible en la UI.
+  String get etiqueta => 'Pendiente';
 
-  static EstadoIncidencia desdeApi(String valor) {
-    switch (valor.toUpperCase()) {
-      case 'EN_ATENCION':
-      case 'EN ATENCION':
-        return EstadoIncidencia.enAtencion;
-      case 'RESUELTA':
-        return EstadoIncidencia.resuelta;
-      default:
-        return EstadoIncidencia.pendiente;
-    }
-  }
+  /// El backend solo devuelve `PENDIENTE` por ahora; cualquier otro valor
+  /// se toma como pendiente.
+  static EstadoIncidencia desdeApi(String valor) => EstadoIncidencia.pendiente;
 }
 
 /// Entidad de dominio que representa una incidencia reportada.

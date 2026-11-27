@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../dominio/uso.dart';
+import '../../../incidencias/presentation/screens/reportar_incidencia_screen.dart';
 import '../../domain/repositories/usos_repository.dart';
 import '../../domain/usecases/finalizar_uso_usecase.dart';
 import '../../domain/usecases/obtener_uso_activo_usecase.dart';
@@ -9,6 +10,10 @@ import '../providers/uso_activo_provider.dart';
 
 /// HU-AL-04: tarjeta del uso activo del alumno con el botón "Finalizar uso"
 /// y, al terminar, el resumen del uso.
+///
+/// HU-AL-06: mientras el uso siga activo también ofrece "Reportar
+/// incidencia", que abre el formulario con el equipo del uso ya
+/// identificado; desaparece al finalizar (solo queda el resumen).
 ///
 /// Consulta `GET /usos/mis-registros` al crearse (cubre reabrir la app con
 /// un uso activo) y de nuevo cada vez que su pantalla vuelve a quedar visible
@@ -118,11 +123,22 @@ class _UsoActivoBody extends StatelessWidget {
 
       case UsoActivoStatus.activo:
       case UsoActivoStatus.finalizando:
+        final uso = provider.usoActivo!;
         return _UsoEnCurso(
-          uso: provider.usoActivo!,
+          uso: uso,
           finalizando: provider.status == UsoActivoStatus.finalizando,
           mensaje: provider.mensaje,
           onFinalizar: provider.finalizar,
+          // HU-AL-06: solo con el uso activo y con el equipo ya
+          // identificado; el resumen de uso finalizado no reporta.
+          onReportar: uso.equipo == null
+              ? null
+              : () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) =>
+                        ReportarIncidenciaScreen(equipo: uso.equipo!),
+                  ),
+                ),
         );
 
       case UsoActivoStatus.finalizado:
@@ -137,12 +153,18 @@ class _UsoEnCurso extends StatelessWidget {
     required this.finalizando,
     required this.mensaje,
     required this.onFinalizar,
+    required this.onReportar,
   });
 
   final Uso uso;
   final bool finalizando;
   final String? mensaje;
   final Future<void> Function() onFinalizar;
+
+  /// HU-AL-06: navega al formulario de reporte con el equipo del uso.
+  /// `null` cuando el backend no devolvió el equipo embebido: en ese caso
+  /// no se ofrece reportar (no hay equipo que identificar).
+  final VoidCallback? onReportar;
 
   @override
   Widget build(BuildContext context) {
@@ -188,6 +210,17 @@ class _UsoEnCurso extends StatelessWidget {
                   : const Icon(Icons.stop_circle_outlined),
               label: const Text('Finalizar uso'),
             ),
+            // HU-AL-06: reportar incidencia del equipo mientras el uso
+            // siga activo (no aparece en el resumen posterior).
+            if (onReportar != null) ...[
+              const SizedBox(height: 8),
+              OutlinedButton.icon(
+                key: const Key('uso_activo_reportar_incidencia'),
+                onPressed: finalizando ? null : onReportar,
+                icon: const Icon(Icons.report_problem_outlined),
+                label: const Text('Reportar incidencia'),
+              ),
+            ],
           ],
         ),
       ),

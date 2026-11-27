@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 import 'package:scei_qr/core/errors/app_exception.dart';
 import 'package:scei_qr/dominio/alta_equipo.dart';
 import 'package:scei_qr/dominio/edicion_equipo.dart';
@@ -12,8 +13,12 @@ import 'package:scei_qr/features/equipos/domain/repositories/equipos_repository.
 import 'package:scei_qr/features/equipos/domain/usecases/validar_qr_usecase.dart';
 import 'package:scei_qr/features/escaneo/domain/permiso_camara.dart';
 import 'package:scei_qr/features/escaneo/presentation/screens/escanear_qr_screen.dart';
+import 'package:scei_qr/features/incidencias/domain/repositories/incidencias_repository.dart';
+import 'package:scei_qr/features/incidencias/presentation/screens/reportar_incidencia_screen.dart';
 import 'package:scei_qr/features/usos/domain/repositories/usos_repository.dart';
 import 'package:scei_qr/features/usos/domain/usecases/iniciar_uso_usecase.dart';
+
+import 'fakes_incidencias.dart';
 
 class _FakeEquiposRepository implements EquiposRepository {
   _FakeEquiposRepository({this.equipo, this.error});
@@ -159,14 +164,20 @@ Future<void> _pantalla(
   required _FakePermisoCamara permiso,
   required _CamaraFake camara,
   IniciarUsoUseCase? iniciarUsoUseCase,
+  bool modoReporte = false,
 }) async {
   await tester.pumpWidget(
-    MaterialApp(
-      home: EscanearQrScreen(
-        validarQrUseCase: ValidarQrUseCase(repo),
-        iniciarUsoUseCase: iniciarUsoUseCase,
-        permisoCamara: permiso,
-        camaraBuilder: camara.construir,
+    // HU-AL-06: el formulario de reporte resuelve su repositorio de aquí.
+    Provider<IncidenciasRepository>.value(
+      value: FakeIncidenciasRepository(),
+      child: MaterialApp(
+        home: EscanearQrScreen(
+          validarQrUseCase: ValidarQrUseCase(repo),
+          iniciarUsoUseCase: iniciarUsoUseCase,
+          permisoCamara: permiso,
+          camaraBuilder: camara.construir,
+          modoReporte: modoReporte,
+        ),
       ),
     ),
   );
@@ -378,6 +389,77 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Confirmar uso'), findsWidgets);
+      expect(usosRepo.tokens, isEmpty);
+    });
+  });
+
+  group('EscanearQrScreen — HU-AL-06 (modo reporte)', () {
+    testWidgets('el botón principal usa la clave propia de reporte', (
+      tester,
+    ) async {
+      final repo = _FakeEquiposRepository(equipo: equipo);
+      final permiso = _FakePermisoCamara(concedido: true);
+      final camara = _CamaraFake();
+
+      await _pantalla(
+        tester,
+        repo: repo,
+        permiso: permiso,
+        camara: camara,
+        modoReporte: true,
+      );
+
+      camara.onDetectado!('token-valido');
+      await tester.pump();
+      await tester.pump();
+
+      expect(
+        find.byKey(const Key('escaneo_equipo_encontrado')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('escaneo_reportar_incidencia')),
+        findsOneWidget,
+      );
+      expect(find.text('Reportar incidencia'), findsOneWidget);
+      // En modo reporte no se reutiliza la clave del alta de uso.
+      expect(find.byKey(const Key('escaneo_confirmar_uso')), findsNothing);
+    });
+
+    testWidgets('al confirmar abre el formulario con ese equipo y no inicia '
+        'uso', (tester) async {
+      final repo = _FakeEquiposRepository(equipo: equipo);
+      final usosRepo = _FakeUsosRepository();
+      final permiso = _FakePermisoCamara(concedido: true);
+      final camara = _CamaraFake();
+
+      await _pantalla(
+        tester,
+        repo: repo,
+        permiso: permiso,
+        camara: camara,
+        iniciarUsoUseCase: IniciarUsoUseCase(usosRepo),
+        modoReporte: true,
+      );
+
+      camara.onDetectado!('token-valido');
+      await tester.pump();
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('escaneo_reportar_incidencia')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ReportarIncidenciaScreen), findsOneWidget);
+      expect(find.byKey(const Key('reporte_formulario')), findsOneWidget);
+      expect(
+        find.byKey(const Key('reporte_equipo_identificador')),
+        findsOneWidget,
+      );
+      expect(find.text('LT-101'), findsOneWidget);
+      expect(find.text('Lab de redes'), findsOneWidget);
+
+      // No se abre la confirmación de uso ni se llama al backend de usos.
+      expect(find.byKey(const Key('confirmar_uso_confirmando')), findsNothing);
       expect(usosRepo.tokens, isEmpty);
     });
   });

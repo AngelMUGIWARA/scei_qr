@@ -10,9 +10,9 @@ import '../providers/reportar_incidencia_provider.dart';
 /// HU-AL-06: pantalla para reportar una incidencia en un equipo.
 ///
 /// Se navega aquí desde [EscanearQrScreen] (ruta por escaneo directo) o
-/// desde la pantalla de uso activo (ruta por registro activo).
-/// El [equipo] llega siempre como parámetro; el alumno se vincula en el
-/// backend mediante el token de sesión.
+/// desde la tarjeta del uso activo en `UsoActivoCard` (ruta desde el
+/// registro en curso). El [equipo] llega siempre como parámetro; el alumno
+/// se vincula en el backend mediante el token de sesión.
 class ReportarIncidenciaScreen extends StatelessWidget {
   const ReportarIncidenciaScreen({
     super.key,
@@ -30,7 +30,8 @@ class ReportarIncidenciaScreen extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) {
         final uc =
-            useCase ?? ReportarIncidenciaUseCase(context.read<IncidenciasRepository>());
+            useCase ??
+            ReportarIncidenciaUseCase(context.read<IncidenciasRepository>());
         return ReportarIncidenciaProvider(uc, equipo);
       },
       child: const _ReportarIncidenciaBody(),
@@ -49,18 +50,19 @@ class _ReportarIncidenciaBody extends StatelessWidget {
       appBar: AppBar(title: const Text('Reportar incidencia')),
       body: switch (provider.status) {
         ReporteIncidenciaStatus.formulario ||
-        ReporteIncidenciaStatus.enviando =>
-          _Formulario(key: const Key('reporte_formulario')),
+        ReporteIncidenciaStatus.enviando => _Formulario(
+          key: const Key('reporte_formulario'),
+        ),
         ReporteIncidenciaStatus.enviado => _Confirmacion(
-            key: const Key('reporte_confirmacion'),
-            incidencia: provider.incidencia!,
-            equipo: provider.equipo,
-          ),
+          key: const Key('reporte_confirmacion'),
+          incidencia: provider.incidencia!,
+          equipo: provider.equipo,
+        ),
         ReporteIncidenciaStatus.error => _ErrorEnvio(
-            key: const Key('reporte_error'),
-            mensaje: provider.error ?? 'No se pudo enviar el reporte.',
-            reintentable: provider.reintentable,
-          ),
+          key: const Key('reporte_error'),
+          mensaje: provider.error ?? 'No se pudo enviar el reporte.',
+          reintentable: provider.reintentable,
+        ),
       },
     );
   }
@@ -79,8 +81,19 @@ class _Formulario extends StatefulWidget {
 
 class _FormularioState extends State<_Formulario> {
   final _formKey = GlobalKey<FormState>();
-  final _descripcionController = TextEditingController();
+  late final TextEditingController _descripcionController;
   bool _intentoEnvio = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // El provider es la fuente de verdad del formulario: cuando se vuelve
+    // desde el estado de error este widget se vuelve a crear y debe
+    // arrancar con lo que el alumno ya había escrito (CA HU-AL-06).
+    _descripcionController = TextEditingController(
+      text: context.read<ReportarIncidenciaProvider>().descripcion,
+    );
+  }
 
   @override
   void dispose() {
@@ -105,9 +118,9 @@ class _FormularioState extends State<_Formulario> {
             const SizedBox(height: 24),
 
             // Selector de tipo de problema (CA: hardware, software, red,
-            // periféricos u otro).
+            // periféricos u otro). Obligatorio y sin preselección.
             Text(
-              'Tipo de problema',
+              'Tipo de problema *',
               style: Theme.of(context).textTheme.labelLarge,
             ),
             const SizedBox(height: 8),
@@ -116,6 +129,20 @@ class _FormularioState extends State<_Formulario> {
               habilitado: !enviando,
               onCambio: provider.cambiarTipo,
             ),
+            // El tipo es obligatorio: se avisa solo tras el primer intento
+            // de envío (CA HU-AL-06).
+            if (_intentoEnvio && provider.tipo == null)
+              Padding(
+                padding: const EdgeInsets.only(top: 8),
+                child: Text(
+                  provider.validarTipo()!,
+                  key: const Key('reporte_error_tipo'),
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.error,
+                    fontSize: 12,
+                  ),
+                ),
+              ),
             const SizedBox(height: 20),
 
             // Campo de descripción obligatoria (CA HU-AL-06).
@@ -124,6 +151,7 @@ class _FormularioState extends State<_Formulario> {
               controller: _descripcionController,
               enabled: !enviando,
               maxLines: 4,
+              maxLength: ReportarIncidenciaProvider.maxDescripcion,
               textCapitalization: TextCapitalization.sentences,
               decoration: const InputDecoration(
                 labelText: 'Descripción del problema *',
@@ -140,9 +168,7 @@ class _FormularioState extends State<_Formulario> {
             const SizedBox(height: 8),
             Text(
               '* Campo obligatorio',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
+              style: Theme.of(context).textTheme.bodySmall
                   ?.copyWith(color: Theme.of(context).colorScheme.outline),
             ),
             const SizedBox(height: 32),
@@ -163,7 +189,7 @@ class _FormularioState extends State<_Formulario> {
                   )
                 : FilledButton.icon(
                     key: const Key('reporte_boton_enviar'),
-                    onPressed: provider.descripcion.trim().isEmpty
+                    onPressed: !provider.descripcionLista
                         ? null
                         : () => _enviar(context, provider),
                     icon: const Icon(Icons.send),
@@ -181,14 +207,13 @@ class _FormularioState extends State<_Formulario> {
     );
   }
 
-  void _enviar(
-    BuildContext context,
-    ReportarIncidenciaProvider provider,
-  ) {
+  void _enviar(BuildContext context, ReportarIncidenciaProvider provider) {
     setState(() => _intentoEnvio = true);
 
-    // Valida campos obligatorios antes de enviar (CA HU-AL-06).
+    // Valida campos obligatorios antes de enviar (CA HU-AL-06): la
+    // descripción con el validator del campo y el tipo en el selector.
     if (!_formKey.currentState!.validate()) return;
+    if (provider.tipo == null) return;
 
     provider.enviar();
   }
@@ -205,7 +230,8 @@ class _SelectorTipo extends StatelessWidget {
     required this.onCambio,
   });
 
-  final TipoProblema valorActual;
+  /// `null` cuando el alumno todavía no eligió (sin preselección).
+  final TipoProblema? valorActual;
   final bool habilitado;
   final void Function(TipoProblema) onCambio;
 
@@ -331,37 +357,45 @@ class _TarjetaResumen extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _Fila(
-              icono: Icons.computer,
-              etiqueta: 'Equipo',
-              valor: identificador,
-              llave: const Key('reporte_resumen_equipo'),
-            ),
-            _Fila(
-              icono: Icons.location_on_outlined,
-              etiqueta: 'Ubicación',
-              valor: ubicacion,
-            ),
-            _Fila(
-              icono: Icons.category_outlined,
-              etiqueta: 'Tipo',
-              valor: incidencia.tipo.etiqueta,
-              llave: const Key('reporte_resumen_tipo'),
-            ),
-            _Fila(
-              icono: Icons.flag_outlined,
-              etiqueta: 'Estado',
-              valor: incidencia.estado.etiqueta,
-              llave: const Key('reporte_resumen_estado'),
-              color: Colors.orange,
-            ),
-            _Fila(
-              icono: Icons.access_time,
-              etiqueta: 'Fecha',
-              valor: _formatearFechaHora(incidencia.fechaReporte),
-            ),
-          ].map((w) => Padding(padding: const EdgeInsets.only(bottom: 8), child: w)).toList(),
+          children:
+              [
+                    _Fila(
+                      icono: Icons.computer,
+                      etiqueta: 'Equipo',
+                      valor: identificador,
+                      llave: const Key('reporte_resumen_equipo'),
+                    ),
+                    _Fila(
+                      icono: Icons.location_on_outlined,
+                      etiqueta: 'Ubicación',
+                      valor: ubicacion,
+                    ),
+                    _Fila(
+                      icono: Icons.category_outlined,
+                      etiqueta: 'Tipo',
+                      valor: incidencia.tipo.etiqueta,
+                      llave: const Key('reporte_resumen_tipo'),
+                    ),
+                    _Fila(
+                      icono: Icons.flag_outlined,
+                      etiqueta: 'Estado',
+                      valor: incidencia.estado.etiqueta,
+                      llave: const Key('reporte_resumen_estado'),
+                      color: Colors.orange,
+                    ),
+                    _Fila(
+                      icono: Icons.access_time,
+                      etiqueta: 'Fecha',
+                      valor: _formatearFechaHora(incidencia.fechaReporte),
+                    ),
+                  ]
+                  .map(
+                    (w) => Padding(
+                      padding: const EdgeInsets.only(bottom: 8),
+                      child: w,
+                    ),
+                  )
+                  .toList(),
         ),
       ),
     );

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../../../../dominio/permiso.dart';
+import '../../../../../dominio/regla_acceso.dart';
 import '../../../../../dominio/sesion.dart';
 import '../../../../escaneo/presentation/screens/escanear_qr_screen.dart';
 import '../../../../usos/presentation/widgets/uso_activo_card.dart';
@@ -71,27 +73,28 @@ class AlumnoHome extends StatelessWidget {
             title: Text('Consultar mis registros'),
             subtitle: Text('HU-AL-05'),
           ),
-          // HU-AL-06: reporte de incidencia del equipo.
-          ListTile(
-            key: const Key('alumno_reportar_incidencia'),
-            leading: const Icon(Icons.report_problem_outlined),
-            title: const Text('Reportar incidencia'),
-            subtitle: const Text('Reporta una falla en la computadora'),
-            onTap: () {
-              // La pantalla de reporte requiere un equipo ya identificado.
-              // Desde el home se llega primero al escaneo; la pantalla de
-              // reporte se abre desde allí con el equipo resuelto.
-              // Si en el futuro se agrega la ruta desde un registro activo,
-              // se puede navegar directamente pasando el equipo activo.
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const EscanearQrScreen(
-                    modoReporte: true,
+          // HU-AL-06: reporte de incidencia del equipo. Se muestra solo
+          // con el permiso correspondiente, como el resto del menú.
+          if (ReglaAcceso.validar(session.rol, Permiso.reportarIncidencia) ==
+              null)
+            ListTile(
+              key: const Key('alumno_reportar_incidencia'),
+              leading: const Icon(Icons.report_problem_outlined),
+              title: const Text('Reportar incidencia'),
+              subtitle: const Text('Reporta una falla en la computadora'),
+              onTap: () {
+                // La pantalla de reporte requiere un equipo ya identificado.
+                // Desde el home se llega primero al escaneo; la pantalla de
+                // reporte se abre desde allí con el equipo resuelto.
+                // El otro punto de entrada es la tarjeta del uso activo
+                // (HU-AL-06), que ya trae el equipo del uso en curso.
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const EscanearQrScreen(modoReporte: true),
                   ),
-                ),
-              );
-            },
-          ),
+                );
+              },
+            ),
         ],
       ),
     );

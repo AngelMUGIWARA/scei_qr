@@ -154,9 +154,8 @@ class _EscanearQrBody extends StatelessWidget {
             if (modoReporte) {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (_) => ReportarIncidenciaScreen(
-                    equipo: provider.equipo!,
-                  ),
+                  builder: (_) =>
+                      ReportarIncidenciaScreen(equipo: provider.equipo!),
                 ),
               );
               return;
@@ -382,11 +381,13 @@ class _EquipoEncontrado extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             FilledButton.icon(
-              key: const Key('escaneo_confirmar_uso'),
+              // HU-AL-06: clave propia en modo reporte para no reutilizar
+              // la del alta de uso.
+              key: modoReporte
+                  ? const Key('escaneo_reportar_incidencia')
+                  : const Key('escaneo_confirmar_uso'),
               onPressed: onConfirmar,
-              icon: Icon(
-                modoReporte ? Icons.report_problem : Icons.check,
-              ),
+              icon: Icon(modoReporte ? Icons.report_problem : Icons.check),
               label: Text(
                 modoReporte ? 'Reportar incidencia' : 'Confirmar uso',
               ),

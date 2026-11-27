@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:provider/provider.dart';
 import 'package:scei_qr/core/errors/app_exception.dart';
 import 'package:scei_qr/dominio/equipo.dart';
 import 'package:scei_qr/dominio/uso.dart';
+import 'package:scei_qr/features/incidencias/domain/repositories/incidencias_repository.dart';
+import 'package:scei_qr/features/incidencias/presentation/screens/reportar_incidencia_screen.dart';
 import 'package:scei_qr/features/usos/domain/repositories/usos_repository.dart';
 import 'package:scei_qr/features/usos/domain/usecases/finalizar_uso_usecase.dart';
 import 'package:scei_qr/features/usos/domain/usecases/obtener_uso_activo_usecase.dart';
 import 'package:scei_qr/features/usos/presentation/widgets/uso_activo_card.dart';
+
+import 'fakes_incidencias.dart';
 
 class _FakeUsosRepository implements UsosRepository {
   Uso? activo;
@@ -68,10 +73,27 @@ Widget _card(_FakeUsosRepository repo) => UsoActivoCard(
   finalizarUsoUseCase: FinalizarUsoUseCase(repo),
 );
 
+/// Uso activo cuya respuesta no trae el equipo embebido.
+final _activoSinEquipo = Uso(
+  id: 6,
+  alumnoId: 9,
+  equipoId: 13,
+  inicio: _inicio,
+  estado: EstadoUso.activo,
+);
+
 Future<void> _pantalla(WidgetTester tester, _FakeUsosRepository repo) async {
   await tester.pumpWidget(
-    MaterialApp(
-      home: Scaffold(body: ListView(children: [_card(repo)])),
+    MultiProvider(
+      // HU-AL-06: el formulario de reporte resuelve su repositorio aquí.
+      providers: [
+        Provider<IncidenciasRepository>.value(
+          value: FakeIncidenciasRepository(),
+        ),
+      ],
+      child: MaterialApp(
+        home: Scaffold(body: ListView(children: [_card(repo)])),
+      ),
     ),
   );
   await tester.pumpAndSettle();
@@ -193,6 +215,82 @@ void main() {
 
       expect(repo.consultas, 2);
       expect(_botonFinalizar, findsOneWidget);
+    });
+  });
+
+  group('UsoActivoCard — HU-AL-06 (reportar incidencia)', () {
+    final botonReportar = find.byKey(
+      const Key('uso_activo_reportar_incidencia'),
+    );
+
+    testWidgets('con uso activo aparece el botón "Reportar incidencia"', (
+      tester,
+    ) async {
+      final repo = _FakeUsosRepository()..activo = _activo;
+
+      await _pantalla(tester, repo);
+
+      expect(botonReportar, findsOneWidget);
+      expect(find.text('Reportar incidencia'), findsOneWidget);
+    });
+
+    testWidgets('sin uso activo no aparece el botón de reportar', (
+      tester,
+    ) async {
+      await _pantalla(tester, _FakeUsosRepository());
+
+      expect(botonReportar, findsNothing);
+      expect(find.text('Reportar incidencia'), findsNothing);
+    });
+
+    testWidgets('si el uso activo no trae el equipo no se ofrece reportar', (
+      tester,
+    ) async {
+      final repo = _FakeUsosRepository()..activo = _activoSinEquipo;
+
+      await _pantalla(tester, repo);
+
+      expect(find.byKey(const Key('uso_activo_en_curso')), findsOneWidget);
+      expect(botonReportar, findsNothing);
+    });
+
+    testWidgets('al tocarlo abre el formulario con el equipo del uso', (
+      tester,
+    ) async {
+      final repo = _FakeUsosRepository()..activo = _activo;
+      await _pantalla(tester, repo);
+
+      await tester.tap(botonReportar);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ReportarIncidenciaScreen), findsOneWidget);
+      expect(find.byKey(const Key('reporte_formulario')), findsOneWidget);
+      expect(
+        find.byKey(const Key('reporte_equipo_identificador')),
+        findsOneWidget,
+      );
+      expect(find.text('LAB-PC-001'), findsOneWidget);
+      expect(find.text('Fila A, Mesa 3'), findsOneWidget);
+      // El equipo es solo lectura: el único campo editable es la descripción.
+      expect(find.byType(TextFormField), findsOneWidget);
+    });
+
+    testWidgets('al finalizar el uso desaparece (solo queda el resumen)', (
+      tester,
+    ) async {
+      final repo = _FakeUsosRepository()
+        ..activo = _activo
+        ..finalizado = _finalizado;
+      await _pantalla(tester, repo);
+
+      expect(botonReportar, findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('uso_activo_finalizar')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('uso_activo_resumen')), findsOneWidget);
+      expect(botonReportar, findsNothing);
+      expect(find.text('Reportar incidencia'), findsNothing);
     });
   });
 

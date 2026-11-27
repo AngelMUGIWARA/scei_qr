@@ -29,11 +29,17 @@ enum ReporteIncidenciaStatus {
 class ReportarIncidenciaProvider extends ChangeNotifier {
   ReportarIncidenciaProvider(this._useCase, this._equipo);
 
+  /// Longitud máxima de la descripción (CA HU-AL-06).
+  static const int maxDescripcion = 500;
+
   final ReportarIncidenciaUseCase _useCase;
   final Equipo _equipo;
 
   ReporteIncidenciaStatus _status = ReporteIncidenciaStatus.formulario;
-  TipoProblema _tipo = TipoProblema.hardware;
+
+  /// El tipo de problema es obligatorio y **no** viene preseleccionado:
+  /// el alumno debe elegirlo (CA HU-AL-06).
+  TipoProblema? _tipo;
   String _descripcion = '';
   Incidencia? _incidencia;
   String? _error;
@@ -43,12 +49,17 @@ class ReportarIncidenciaProvider extends ChangeNotifier {
   // ── Getters ──────────────────────────────────────────────────────────────
 
   ReporteIncidenciaStatus get status => _status;
-  TipoProblema get tipo => _tipo;
+  TipoProblema? get tipo => _tipo;
   String get descripcion => _descripcion;
   Incidencia? get incidencia => _incidencia;
   String? get error => _error;
   bool get reintentable => _reintentable;
   Equipo get equipo => _equipo;
+
+  /// `true` cuando la descripción tiene contenido (el otro campo
+  /// obligatorio, el tipo, se valida al intentar enviar). El botón se
+  /// habilita solo con esto (CA HU-AL-06).
+  bool get descripcionLista => _descripcion.trim().isNotEmpty;
 
   // ── Acciones del formulario ───────────────────────────────────────────────
 
@@ -64,15 +75,6 @@ class ReportarIncidenciaProvider extends ChangeNotifier {
     _notificar();
   }
 
-  /// Validación local: descripción no puede estar vacía (CA HU-AL-06).
-  String? get errorDescripcion {
-    if (_descripcion.trim().isEmpty &&
-        _status == ReporteIncidenciaStatus.formulario) {
-      return null; // No mostramos error antes del primer intento de envío.
-    }
-    return null;
-  }
-
   /// Devuelve el mensaje de error de descripción solo cuando el campo
   /// fue tocado y está vacío (usado por el TextField).
   String? validarDescripcion(String valor) {
@@ -80,12 +82,22 @@ class ReportarIncidenciaProvider extends ChangeNotifier {
     return null;
   }
 
+  /// Mensaje para el selector de tipo cuando falta la selección obligatoria.
+  String? validarTipo() {
+    if (_tipo == null) return 'Elige el tipo de problema.';
+    return null;
+  }
+
   // ── Envío ─────────────────────────────────────────────────────────────────
 
   Future<void> enviar() async {
-    // Validación de campos obligatorios antes de enviar (CA HU-AL-06).
-    if (_descripcion.trim().isEmpty) return;
+    // Validación de campos obligatorios antes de enviar (CA HU-AL-06):
+    // sin tipo elegido o sin descripción no se hace la petición. Tampoco se
+    // reenvía mientras la petición esté en vuelo o ya haya sido confirmada
+    // (protección contra toques repetidos).
+    if (_tipo == null || _descripcion.trim().isEmpty) return;
     if (_status == ReporteIncidenciaStatus.enviando) return;
+    if (_status == ReporteIncidenciaStatus.enviado) return;
 
     _status = ReporteIncidenciaStatus.enviando;
     _error = null;
@@ -96,7 +108,7 @@ class ReportarIncidenciaProvider extends ChangeNotifier {
       _incidencia = await _useCase(
         NuevaIncidencia(
           equipoId: _equipo.id,
-          tipo: _tipo,
+          tipo: _tipo!,
           descripcion: _descripcion.trim(),
         ),
       );

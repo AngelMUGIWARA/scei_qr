@@ -47,11 +47,14 @@ class HttpIncidenciasDataSource implements IncidenciasRemoteDataSource {
     required String descripcion,
   }) async {
     final uri = Uri.parse('$_base/incidencias');
-    final response = await _post(uri, fields: {
-      'equipoId': '$equipoId',
-      'titulo': tipo.etiqueta,
-      'descripcion': descripcion.trim(),
-    });
+    final response = await _post(
+      uri,
+      fields: {
+        'equipoId': '$equipoId',
+        'titulo': tipo.etiqueta,
+        'descripcion': descripcion.trim(),
+      },
+    );
 
     if (response.statusCode != 200 && response.statusCode != 201) {
       _throwHttpError(response);
@@ -82,8 +85,9 @@ class HttpIncidenciasDataSource implements IncidenciasRemoteDataSource {
       ..fields.addAll(fields);
 
     try {
-      final streamed =
-          await _client.send(request).timeout(AppConfig.requestTimeout);
+      final streamed = await _client
+          .send(request)
+          .timeout(AppConfig.requestTimeout);
       return await http.Response.fromStream(streamed)
           .timeout(AppConfig.requestTimeout);
     } on AppException {
@@ -112,10 +116,6 @@ class HttpIncidenciasDataSource implements IncidenciasRemoteDataSource {
       case 404:
         throw NotFoundException(
           _mensaje(body) ?? 'El equipo no existe o está dado de baja.',
-        );
-      case 409:
-        throw ConflictException(
-          _mensaje(body) ?? 'Ya existe una incidencia activa para este equipo.',
         );
       case 422:
         throw ValidationException(
