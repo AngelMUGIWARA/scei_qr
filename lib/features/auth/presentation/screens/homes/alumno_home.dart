@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../../dominio/sesion.dart';
 import '../../../../escaneo/presentation/screens/escanear_qr_screen.dart';
+import '../../../../usos/presentation/widgets/uso_activo_card.dart';
 import '../../providers/auth_provider.dart';
 import '../../rol_ui.dart';
 import 'boton_cerrar_sesion.dart';
@@ -39,6 +40,8 @@ class AlumnoHome extends StatelessWidget {
               subtitle: Text('${session.rol.etiqueta} · ${session.username}'),
             ),
           ),
+          // HU-AL-04: uso activo con el botón "Finalizar uso".
+          const UsoActivoCard(),
           const SizedBox(height: 8),
           const Text(
             'Próximamente (Iteración 2):',

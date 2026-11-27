@@ -12,4 +12,20 @@ class UsosRepositoryImpl implements UsosRepository {
     final model = await remote.iniciarUso(qrToken);
     return model.toEntity();
   }
+
+  @override
+  Future<Uso?> obtenerUsoActivo() async {
+    final registros = await remote.misRegistros();
+    for (final model in registros) {
+      final uso = model.toEntity();
+      if (uso.estaActivo) return uso;
+    }
+    return null;
+  }
+
+  @override
+  Future<Uso> finalizarUso(int usoId) async {
+    final model = await remote.finalizarUso(usoId);
+    return model.toEntity();
+  }
 }

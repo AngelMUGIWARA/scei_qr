@@ -214,4 +214,184 @@ void main() {
       );
     });
   });
+
+  // HU-AL-04 -------------------------------------------------------------
+
+  Map<String, dynamic> cuerpoFinalizado() => {
+    ...cuerpoUso(),
+    'fin': '2026-11-08T17:05:00.000Z',
+    'estado': 'FINALIZADO',
+  };
+
+  group('HttpUsosDataSource.misRegistros — HU-AL-04', () {
+    test('GET /usos/mis-registros con Bearer devuelve la lista', () async {
+      final client = MockClient((request) async {
+        expect(request.method, 'GET');
+        expect(request.url.toString(), '$baseUrl/usos/mis-registros');
+        expect(request.headers['Authorization'], 'Bearer jwt-alumno');
+        return http.Response(
+          jsonEncode([cuerpoFinalizado(), cuerpoUso()]),
+          200,
+        );
+      });
+
+      final registros = await datasource(client).misRegistros();
+
+      expect(registros, hasLength(2));
+      expect(registros[0].estado.name, 'finalizado');
+      expect(registros[1].estado.name, 'activo');
+      expect(registros[1].fin, isNull);
+      expect(registros[1].inicio, DateTime.utc(2026, 11, 8, 15, 30));
+      expect(registros[1].inicio.isUtc, isTrue);
+    });
+
+    test('lista vacía devuelve una lista vacía', () async {
+      final client = MockClient((_) async => http.Response('[]', 200));
+
+      expect(await datasource(client).misRegistros(), isEmpty);
+    });
+
+    test('cuerpo que no es lista produce ServerException', () async {
+      final client = MockClient((_) async => http.Response('{}', 200));
+
+      await expectLater(
+        datasource(client).misRegistros(),
+        throwsA(isA<ServerException>()),
+      );
+    });
+
+    test('401 produce AuthException', () async {
+      final client = MockClient((_) async => http.Response('{}', 401));
+
+      await expectLater(
+        datasource(client).misRegistros(),
+        throwsA(isA<AuthException>()),
+      );
+    });
+
+    test('sin conexión produce NetworkException', () async {
+      final client = MockClient(
+        (_) async => throw http.ClientException('Failed host lookup'),
+      );
+
+      await expectLater(
+        datasource(client).misRegistros(),
+        throwsA(isA<NetworkException>()),
+      );
+    });
+  });
+
+  group('HttpUsosDataSource.finalizarUso — HU-AL-04', () {
+    test('PATCH /usos/{id}/finalizar devuelve el uso con fin', () async {
+      final client = MockClient((request) async {
+        expect(request.method, 'PATCH');
+        expect(request.url.toString(), '$baseUrl/usos/5/finalizar');
+        expect(request.headers['Authorization'], 'Bearer jwt-alumno');
+        return http.Response(jsonEncode(cuerpoFinalizado()), 200);
+      });
+
+      final model = await datasource(client).finalizarUso(5);
+
+      expect(model.id, 5);
+      expect(model.estado.name, 'finalizado');
+      expect(model.inicio, DateTime.utc(2026, 11, 8, 15, 30));
+      expect(model.fin, DateTime.utc(2026, 11, 8, 17, 5));
+    });
+
+    test('403 produce ForbiddenException (uso de otro alumno)', () async {
+      final client = MockClient(
+        (_) async => http.Response(
+          jsonEncode({'message': 'Solo puede finalizar sus propios usos'}),
+          403,
+        ),
+      );
+
+      await expectLater(
+        datasource(client).finalizarUso(5),
+        throwsA(
+          isA<ForbiddenException>().having(
+            (e) => e.message,
+            'message',
+            'Solo puedes finalizar tus propios usos.',
+          ),
+        ),
+      );
+    });
+
+    test('404 produce NotFoundException', () async {
+      final client = MockClient(
+        (_) async =>
+            http.Response(jsonEncode({'message': 'Uso 5 no encontrado'}), 404),
+      );
+
+      await expectLater(
+        datasource(client).finalizarUso(5),
+        throwsA(isA<NotFoundException>()),
+      );
+    });
+
+    test('404 sin mensaje usa un texto propio de HU-AL-04', () async {
+      final client = MockClient((_) async => http.Response('', 404));
+
+      await expectLater(
+        datasource(client).finalizarUso(5),
+        throwsA(
+          isA<NotFoundException>().having(
+            (e) => e.message,
+            'message',
+            'El registro de uso no existe.',
+          ),
+        ),
+      );
+    });
+
+    test('409 produce ConflictException "El uso ya fue finalizado"', () async {
+      final client = MockClient(
+        (_) async => http.Response(
+          jsonEncode({'message': 'El uso ya fue finalizado'}),
+          409,
+        ),
+      );
+
+      await expectLater(
+        datasource(client).finalizarUso(5),
+        throwsA(
+          isA<ConflictException>().having(
+            (e) => e.message,
+            'message',
+            'El uso ya fue finalizado',
+          ),
+        ),
+      );
+    });
+
+    test('401 produce AuthException', () async {
+      final client = MockClient((_) async => http.Response('{}', 401));
+
+      await expectLater(
+        datasource(client).finalizarUso(5),
+        throwsA(isA<AuthException>()),
+      );
+    });
+
+    test('sin conexión produce NetworkException', () async {
+      final client = MockClient(
+        (_) async => throw http.ClientException('Connection refused'),
+      );
+
+      await expectLater(
+        datasource(client).finalizarUso(5),
+        throwsA(isA<NetworkException>()),
+      );
+    });
+
+    test('respuesta 200 con cuerpo inválido produce ServerException', () async {
+      final client = MockClient((_) async => http.Response('<html>', 200));
+
+      await expectLater(
+        datasource(client).finalizarUso(5),
+        throwsA(isA<ServerException>()),
+      );
+    });
+  });
 }
